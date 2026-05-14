@@ -1,4 +1,5 @@
 <?php
+require 'include/config.inc.php';
 // 1. CORS 設定 (根據開發環境調整，* 代表允許所有來源)
 // 1. 允許所有網域存取
 header("Access-Control-Allow-Origin: *");
@@ -10,9 +11,9 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 
 // 2. 處理 Preflight (預檢請求)
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  exit;
-}
+// if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+//   exit;
+// }
 
 // 3. 設定回傳 JSON
 header('Content-Type: application/json; charset=utf-8');
@@ -26,6 +27,10 @@ $json_raw = file_get_contents('php://input');
 $data = json_decode($json_raw, true);
 // --- 重點結束 ---
 
+// 測是假資料
+// $data['email'] = 'cvizir@gmail.com';
+// $data['password'] = '123456';
+// echo count($data) ;  
 
 // 檢查資料是否成功接收
 if (count($data) > 0) {
@@ -33,10 +38,10 @@ if (count($data) > 0) {
   // ==========================================
   // 2. 接收使用者輸入的帳號密碼 (通常來自表單 POST)
   // ==========================================
-  if ($data['account'] != '' && $data['password'] != null) {
-    $account = $data['account'];
+  if ($data['email'] != '' && $data['password'] != null) {
+    $email = $data['email'];
   } else {
-    $account = '未知用戶';
+    $email = '未知用戶';
   }
   if ($data['password'] != '' && $data['password'] != null) {
     $password = $data['password'];
@@ -45,7 +50,7 @@ if (count($data) > 0) {
   }
 
   // 簡單檢查是否有輸入
-  if (empty($account) || empty($password)) {
+  if (empty($email) || empty($password)) {
     die("請輸入帳號與密碼。");
   }
 
@@ -53,13 +58,13 @@ if (count($data) > 0) {
   // 3. 執行 SQL 查詢 (使用預處理語句)
   // ==========================================
   // 使用 LIMIT 1 提高效能，因為帳號通常是唯一的，找到一筆就可以停了
-  $sql = "SELECT id, account FROM member WHERE account = :account AND password = :password LIMIT 1";
+  $sql = "SELECT * FROM member WHERE email = :email AND password = :password LIMIT 1";
 
   $stmt = $pdo->prepare($sql);
 
   // 綁定參數並執行 (PDO 會自動幫你過濾特殊字元，防止 SQL 注入)
   $stmt->execute([
-    ':account'  => $account,
+    ':email'  => $email,
     ':password' => $password
   ]);
 
@@ -74,14 +79,14 @@ if (count($data) > 0) {
     // 登入成功！將會員資訊存入 Session
     $_SESSION['is_logged_in'] = true;
     $_SESSION['member_id']    = $member['id'];
-    $_SESSION['account']      = $member['account'];
+    $_SESSION['email']      = $member['email'];
     $_SESSION['member_info']  = $member;
-    echo "登入成功！歡迎回來，" . htmlspecialchars($member['account']);
+    // echo "登入成功！歡迎回來，" . htmlspecialchars($member['email']);
 
     echo json_encode([
       'success' => true,
       'rtnCode' => 0,
-      'rtnMsg' => "你好 {$account}，登入成功！",
+      'rtnMsg' => "你好 {$email}，登入成功！",
       'data' => $member
     ]);
 
@@ -109,3 +114,5 @@ if (count($data) > 0) {
     'data' => ''
   ]);
 }
+
+?>
