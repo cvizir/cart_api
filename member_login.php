@@ -11,9 +11,9 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 
 // 2. 處理 Preflight (預檢請求)
-// if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-//   exit;
-// }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  exit;
+}
 
 // 3. 設定回傳 JSON
 header('Content-Type: application/json; charset=utf-8');
@@ -100,13 +100,13 @@ if (count($data) > 0) {
     echo json_encode([
       'success' => false,
       'rtnCode' => 0,
-      'rtnMsg' => "帳號或密碼錯誤",
+      'rtnMsg' => "帳號或密碼錯誤".json_encode($data),
       'data' => ''
     ]);
   }
 
 } else {
-  http_response_code(400);
+  // http_response_code(400);
   echo json_encode([
     'success' => false,
     'rtnCode' => 0,
