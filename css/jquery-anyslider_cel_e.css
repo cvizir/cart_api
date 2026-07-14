@@ -1,0 +1,117 @@
+/* Bare minimum styles */
+.slider {
+	-ms-touch-action: none; /* Prevent default touch actions on Windows 8. Only required for IE10 */
+	overflow: auto; /* Not required but recommended for accessibility when JavaScript is turned off */
+	position: relative;
+	touch-action: none; /* Prevent default touch actions on Windows 8. Supported in IE11+ */
+}
+
+/* AnySlider can be styled to your liking. This is just example styles */
+.slider {
+	height: 5000px;;
+	text-align: center;
+	width:auto;
+	/* background-color:#e7e8ea; */
+	/* background-color:#FFF;*/
+}
+.slider1 {
+	width:1000px;
+}
+
+/* The arrows can of course also be styled to your liking. This is just example styles */
+.as-prev-arrow, .as-next-arrow {
+	background: url(../img/arrows_3.png) no-repeat;
+	cursor: pointer;
+	filter: alpha(opacity=1);
+	height: 66px;
+	opacity: 1;
+	overflow: hidden;
+	position: absolute;
+	text-indent: 100%;
+	top: 4600px;
+	white-space: nowrap;
+	width: 167px;
+	z-index: 1;
+}
+
+.as-prev-arrow {
+	left: 5px;
+}
+
+.as-next-arrow {
+	background-position: -167px 0;
+	right: 5px;
+}
+
+.as-prev-arrow:hover {
+	background-position: 0px -66px;
+	left: 5px;
+}
+
+.as-next-arrow:hover {
+	background-position: -167px -66px;
+	right: 5px;
+}
+
+.slider:hover .as-prev-arrow, .slider:hover .as-next-arrow {
+	filter: alpha(opacity=1);
+	opacity: 1;
+}
+
+/* The same rules for styling apply here. Style to your liking */
+.as-nav {
+	bottom: -30px;
+	left: 50%;
+	margin-left: -27px;
+	position: absolute;
+	text-align: left;
+	width: 120px;
+	z-index: 1;
+}
+
+.as-nav a {
+	background: url(../img/bullets.png) no-repeat;
+	height: 16px;
+	display: inline-block;
+	margin: 0 1px;
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+	width: 16px;
+}
+
+a.as-active, .as-nav a:hover {
+	background-position: 0 -16px;
+}
+
+/* Other styles not related to AnySlider */
+
+
+section {
+	display: block;
+}
+
+.content {
+	margin: 0 auto;
+	position: relative;
+	width: 80%;
+}
+
+h1 {
+	font-size: 20px;
+	margin: 10px 0;
+}
+
+p {
+	margin: 10px 0;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+}
+
+.slider-wrapper {
+	height: auto;
+	position: relative;
+}

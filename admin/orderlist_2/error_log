@@ -1,0 +1,107 @@
+[26-Aug-2013 06:52:26] PHP Fatal error:  Using $this when not in object context in /home1/cvizirco/public_html/hongdaocom/include/function.php on line 28
+[26-Aug-2013 06:52:37] PHP Fatal error:  Using $this when not in object context in /home1/cvizirco/public_html/hongdaocom/include/function.php on line 28
+[25-May-2014 22:42:25 Asia/Taipei] PHP Notice:  Undefined index: page in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 7
+[25-May-2014 22:42:25 Asia/Taipei] PHP Notice:  Undefined variable: where in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:42:25 Asia/Taipei] PHP Notice:  Undefined variable: order in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:42:25 Asia/Taipei] PHP Notice:  Undefined variable: articleClass in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:42:25 Asia/Taipei] PHP Notice:  Trying to get property of non-object in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:42:25 Asia/Taipei] PHP Notice:  Undefined variable: sh_post in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 31
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: pagesize in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 8
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined variable: page in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 11
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: add_pic in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 20
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: del_pic in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 21
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: uptime in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 27
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant uptime - assumed 'uptime' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 31
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant member_no - assumed 'member_no' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 32
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: member_no in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 32
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant pd_info - assumed 'pd_info' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 33
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: pd_info in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 33
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant amount - assumed 'amount' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 34
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: amount in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 34
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant shipping_rate - assumed 'shipping_rate' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 35
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: shipping_rate in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 35
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant userinfo - assumed 'userinfo' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 36
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: userinfo in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 36
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_name - assumed 'receives_name' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 37
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_name in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 37
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_email - assumed 'receives_email' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 38
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_email in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 38
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_tel - assumed 'receives_tel' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 39
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_tel in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 39
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_mphone - assumed 'receives_mphone' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 40
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_mphone in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 40
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_city - assumed 'receives_city' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 41
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_city in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 41
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_area - assumed 'receives_area' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 42
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_area in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 42
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_addr - assumed 'receives_addr' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 43
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_addr in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 43
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant receives_zipcode - assumed 'receives_zipcode' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 44
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: receives_zipcode in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 44
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant delivery_date - assumed 'delivery_date' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 45
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: delivery_date in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 45
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant delivery_interval - assumed 'delivery_interval' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 46
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: delivery_interval in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 46
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant transportation - assumed 'transportation' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 47
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: transportation in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 47
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant ps - assumed 'ps' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 48
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: ps in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 48
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Use of undefined constant state - assumed 'state' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 49
+[25-May-2014 22:42:34 Asia/Taipei] PHP Notice:  Undefined index: state in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 49
+[25-May-2014 22:42:35 Asia/Taipei] PHP Notice:  Undefined variable: where in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:42:35 Asia/Taipei] PHP Notice:  Undefined variable: order in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:42:35 Asia/Taipei] PHP Notice:  Undefined variable: articleClass in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:42:35 Asia/Taipei] PHP Notice:  Trying to get property of non-object in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:42:35 Asia/Taipei] PHP Notice:  Undefined variable: sh_post in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 31
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: pagesize in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 8
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined variable: page in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 11
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: add_pic in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 20
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: del_pic in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 21
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: uptime in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 27
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant uptime - assumed 'uptime' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 31
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant member_no - assumed 'member_no' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 32
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: member_no in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 32
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant pd_info - assumed 'pd_info' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 33
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: pd_info in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 33
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant amount - assumed 'amount' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 34
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: amount in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 34
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant shipping_rate - assumed 'shipping_rate' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 35
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: shipping_rate in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 35
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant userinfo - assumed 'userinfo' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 36
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: userinfo in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 36
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_name - assumed 'receives_name' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 37
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_name in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 37
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_email - assumed 'receives_email' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 38
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_email in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 38
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_tel - assumed 'receives_tel' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 39
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_tel in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 39
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_mphone - assumed 'receives_mphone' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 40
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_mphone in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 40
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_city - assumed 'receives_city' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 41
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_city in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 41
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_area - assumed 'receives_area' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 42
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_area in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 42
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_addr - assumed 'receives_addr' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 43
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_addr in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 43
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant receives_zipcode - assumed 'receives_zipcode' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 44
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: receives_zipcode in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 44
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant delivery_date - assumed 'delivery_date' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 45
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: delivery_date in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 45
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant delivery_interval - assumed 'delivery_interval' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 46
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: delivery_interval in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 46
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant transportation - assumed 'transportation' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 47
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: transportation in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 47
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant ps - assumed 'ps' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 48
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: ps in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 48
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Use of undefined constant state - assumed 'state' in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 49
+[25-May-2014 22:42:42 Asia/Taipei] PHP Notice:  Undefined index: state in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/save.php on line 49
+[25-May-2014 22:42:50 Asia/Taipei] PHP Notice:  Undefined variable: where in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:42:50 Asia/Taipei] PHP Notice:  Undefined variable: order in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:42:50 Asia/Taipei] PHP Notice:  Undefined variable: articleClass in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:42:50 Asia/Taipei] PHP Notice:  Trying to get property of non-object in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:42:50 Asia/Taipei] PHP Notice:  Undefined variable: sh_post in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 31
+[25-May-2014 22:43:17 Asia/Taipei] PHP Notice:  Undefined variable: where in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:43:17 Asia/Taipei] PHP Notice:  Undefined variable: order in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 13
+[25-May-2014 22:43:17 Asia/Taipei] PHP Notice:  Undefined variable: articleClass in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:43:17 Asia/Taipei] PHP Notice:  Trying to get property of non-object in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 14
+[25-May-2014 22:43:17 Asia/Taipei] PHP Notice:  Undefined variable: sh_post in /home1/cvizirco/public_html/hongdaocom/admin/orderlist/list.php on line 31

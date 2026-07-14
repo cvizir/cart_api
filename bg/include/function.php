@@ -1,8 +1,361 @@
 <?php
+	function start_session($expire = 0){
+		if ($expire == 0) {
+			$expire = ini_get('session.gc_maxlifetime');
+		} else {
+			ini_set('session.gc_maxlifetime', $expire);
+		}
+	
+		if (empty($_COOKIE['PHPSESSID'])) {
+			session_set_cookie_params($expire);
+			session_start();
+		} else {
+			session_start();
+			setcookie('PHPSESSID', session_id(), time() + $expire);
+		}
+    }
+	function cart_re_total(){
+		$_SESSION['amount']=$_SESSION['total_price']-$_SESSION['promo']['promo_total']+$_SESSION['post_info']['transportation']-$_SESSION['gift_card']['gift_price']+$_SESSION['pay_mode_price'];			
+		if($_SESSION['amount']<0){ $_SESSION['amount']=0; }
+	}
+	function cart_transportation_total(){		
+		if(@in_array('health', $_SESSION['order_post_type']) || @in_array('time_limit', $_SESSION['order_post_type']) || @in_array('normal', $_SESSION['order_post_type'])){
+			$_SESSION['post_info']['transportation']=0; 
+		}
+		if(@in_array('frozen', $_SESSION['order_post_type']) || @in_array('cold', $_SESSION['order_post_type']) || @in_array('live', $_SESSION['order_post_type']) || in_array('baking', $_SESSION['order_post_type'])){
+			if(($_SESSION['total_price']-$_SESSION['promo']['promo_total'])>=2500){
+				$_SESSION['post_info']['transportation']=0; 
+			}else{
+				if(@in_array('live', $_SESSION['order_post_type'])){
+				$_SESSION['post_info']['transportation']=200;
+				}else{
+				$_SESSION['post_info']['transportation']=150;
+				}
+			}
+		}
+		
+		if(@in_array('selftake', $_SESSION['order_post_type'])){
+			$_SESSION['post_info']['transportation']=0; 
+		} 
+
+		if($_SESSION['post_info']['get_type']=='自取'){
+			$_SESSION['post_info']['transportation']=0; 
+		}
+	}
 	
 	
+	function inject_check($sql_str)	{
+		return eregi('select|insert|update|delete|\'|\/\*|\*|\.\.\/|\.\/|union|into|load_file|outfile', $sql_str); // 進行過濾
+	}
+	function checkAdmim($all_str,$check_txt,$trace) {
+		if(CHECK_ADMIN=='true'){
+			if($trace=='1'){ echo 'CHECK_ADMIN='.CHECK_ADMIN.'<br />'.'$all_str='.$all_str.'<br />'.'$check_txt='.$check_txt.'<br />'; }
+			//如果有權限資料
+
+			if($all_str!=''){
+				//權限是否符合
+				if(strExist($all_str,$check_txt)){
+					return true;
+					
+				}else{
+					return false;
+				}
+			}else{
+				return false;
+			}
+		}else{
+			return true;
+		}	
+				
+	}
+	function checkAdmimPv($admin_str,$check_txt,$check_type,$trace) {
+		$index_err=0;
+		if($trace=='1'){ echo 'admin_str='.$admin_str.'<br />'.'$check_txt='.$check_txt.'<br />'.'$check_type='.$check_type.'<br />'; }
+		
+		if($check_txt!='' && $check_type!=''){
+			
+			if(CHECK_ADMIN==true &&  $_SESSION["admin_index"]!='root'){
+
+				//權限是否符合
+				if(strExist($admin_str,$check_txt.'_'.$check_type)){
+					return true;
+				}else{
+					$index_err=1;
+				}
+				
+			}	
+		}else{
+			$index_err=1;
+		}	
+		
+		if($index_err=='1'){
+			
+			if($check_type=='save'){
+				global $cms_mode,$msg,$web_url;
+				$cms_mode='pv_error';	
+				$msg='您的權限不足!!';	
+				$web_url='../main.php';	
+			}
+			echo'<script language="JavaScript" type="text/JavaScript">
+				alert("您的權限不足!!");
+				window.location.href="../main.php";
+			</script> ';  
+		}	
+	}
+	
+	function getStock($product_num,$trace) {
+		$sql_product="SELECT * FROM product WHERE `product_num`='$product_num'";
+		$rs_product=mysql_query($sql_product);
+		$row_pd=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
+		return $row_pd['pd_stock'];
+			
+	}
+	
+	
+	function LoginMember($account,$psw,$trace) {
+		if($account!='' && $psw!='' ){
+		$sql_member="SELECT * FROM `member` WHERE `account`='$account' AND `psw`='$psw'";
+		//echo"$sql_member";
+		$rs_member=mysql_query($sql_member);
+		$num_member=mysql_num_rows($rs_member);
+		if($num_member=='1'){
+			$row_member=mysql_fetch_array($rs_member,MYSQL_ASSOC);
+			if($row_member['email_check']=='1'){
+			//print_r($row_member);
+			$_SESSION['member']['no'] = $row_member['no'];
+			$_SESSION['member']['member_code'] = $row_member['member_code'];
+			$_SESSION['member']['psw'] = $row_member['psw'];	
+			$_SESSION['member']['name'] = $row_member['name'];
+			$_SESSION['member']['email'] = $row_member['email'];
+			$_SESSION['member']['account'] = $row_member['account'];
+			$_SESSION['member']['mem_lv'] = $row_member['mem_lv'];
+			$_SESSION['member']['mem_lv_start'] = $row_member['mem_lv_start'];
+			$_SESSION['member']['mem_lv_end'] = $row_member['mem_lv_end'];
+			$_SESSION['member']['regtime'] = $row_member['regtime'];
+			$_SESSION['member']['sex'] = $row_member['sex'];
+			$_SESSION['member']['phone'] = $row_member['phone'];
+			$_SESSION['member']['country'] = $row_member['country'];
+			$_SESSION['member']['city'] = $row_member['city'];
+			$_SESSION['member']['area'] = $row_member['area'];
+			$_SESSION['member']['addr'] = $row_member['addr'];
+			$_SESSION['member']['zipcode'] = $row_member['zipcode'];	
+			$_SESSION['member']['birthday'] = $row_member['birthday'];
+			$_SESSION['member']['email_check'] = $row_member['email_check'];	
+			$_SESSION['member']['esend'] = $row_member['esend'];	
+			$_SESSION['member']['wish_list'] = explode(",",$row_member['wish_list']);	
+		    $_SESSION['member']['last_login'] =$row_member['last_login']; 
+		    $_SESSION['member']['buy_total'] =$row_member['buy_total'];
+			$_SESSION['member']['mem_mode'] =$row_member['mem_mode'];
+			
+			
+		    $_SESSION['post_info']['invoice_name'] =$row_member['name']; 
+		    $_SESSION['post_info']['invoice_email'] =$row_member['email']; 
+		    $_SESSION['post_info']['invoice_tel'] =$row_member['phone']; 
+		    $_SESSION['post_info']['invoice_city'] =$row_member['city']; 
+		    $_SESSION['post_info']['invoice_area'] =$row_member['area']; 
+		    $_SESSION['post_info']['invoice_addr'] =$row_member['addr']; 
+		    $_SESSION['post_info']['invoice_zipcode'] =$row_member['zipcode'];
+			$_SESSION['post_info']['invoice_country'] =$row_member['country'];
+			}
+		}
+		}
+	}
+	
+	
+	
+	
+	function getPdPprice($product_num,$trace) {	
+	    $now_time=date("Y-m-d H:i:s");
+	    //echo"$trace";
+	
+		$sql_product="SELECT a.*,b.name AS pdcat_name ,c.pdcat_t_code AS pdcat_t_code ,c.name AS pdcat_t_name  FROM product a left join pdcat b on a.pdcat_code = b.pdcat_code left join pdcat_m c on b.pdcat_m_code = c.pdcat_m_code WHERE a.product_num='$product_num' AND a.ishow='1'
+	";
+		$rs_product=@mysql_query($sql_product);
+		$num_product=@mysql_num_rows($rs_product);
+		$row_pd=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
+		//echo'$sql_product='."$sql_product";
+	
+	
+		$product_data=$row_pd;
+	
+		//判斷所屬的類型
+		
+		$sql_act_sell="SELECT * FROM `act_sell` WHERE ( `product_code` LIKE '%$product_num%' OR `product_price` LIKE '%$product_num%' ) AND `start_time`<='$now_time' AND `end_time`>='$now_time' AND `ishow`='1' LIMIT 1";
+
+		$rs_act_sell=mysql_query($sql_act_sell);
+		$num_act_sell=mysql_num_rows($rs_act_sell);
+		$row_act_sell=mysql_fetch_array($rs_act_sell,MYSQL_ASSOC);
+		$product_data['act_sell_code']=$row_act_sell['act_sell_code'];
+		$product_data['act_sell_name']=$row_act_sell['name'];
+		$product_data['num_discount']=$row_act_sell['num_discount'];
+		if($num_act_sell==0){
+			$m_action='add';	
+			$product_data['m_action']='add';	
+		}else{
+			if($row_act_sell['m_type']=='1'){ 
+				$m_action='sp_sell'; 
+				$product_data['m_action']='sp_sell';	
+			}
+			if($row_act_sell['m_type']=='0'){ 
+				$m_action='num_sell';
+				$product_data['m_action']='num_sell';	 
+			}	
+		}
+		
+		if($_SESSION['member']['mem_lv']=='lv_4' || $_SESSION['member']['mem_lv']=='lv_5' || $_SESSION['member']['mem_lv']=='lv_6'){
+			$m_action='add';	
+			$product_data['m_action']='add';
+			$product_data['act_sell_code']='';
+			$product_data['act_sell_name']='';
+			$product_data['num_discount']='';
+		}
+		
+		
+
+		//取得會員折扣價
+		$sql_discount="SELECT * FROM `discount` WHERE `discount_code`='".$row_pd['discount_code']."'";
+		$rs_discount=mysql_query($sql_discount);
+		$num_discount=mysql_num_rows($rs_discount);
+		$row_discount=mysql_fetch_array($rs_discount,MYSQL_ASSOC);
+		$discount_r=$row_discount[$_SESSION['member']['mem_lv']];
+		if($discount_r==''){ $discount_r=0; }
+		$mem_price=floor($row_pd['price']*($discount_r)/100);
+
+		
+		//商品特賣
+		if($m_action=='sp_sell'){
+			
+			$act_array=explode(",",$row_act_sell['product_price']);
+			for( $I=0; $I<count($act_array); $I+=2){
+				$price[$act_array[$I]]=$act_array[($I+1)];
+				$product_code_array[]=$act_array[$I];
+				$product_code_txt="('".join("','",$product_code_array)."')";
+			}
+			$sp_price=$price[$product_num];
+			if($mem_price>=$sp_price){ $sell_price=$sp_price; }
+			if($mem_price<=$sp_price){ $sell_price=$mem_price; }
+		}
+		if($m_action=='add'){
+			$sell_price=$mem_price;
+		}
+		if($m_action=='num_sell'){
+			$sell_price=$mem_price;
+		}	
+		if($_SESSION['member']['member_code']!=''){
+	
+			//加入購物車
+			$buy_index='no';
+			if($_SESSION['order_list'][$row_pd['product_code']]['pd_buy_num']!=''){
+			$buy_index='yes';
+			}
+			if($_SESSION['sp_sell'][$row_pd['product_code']]['pd_buy_num']!=''){
+			$buy_index='yes';
+			}
+			if($_SESSION['num_sell'][$row_act_sell['act_sell_code']][$row_pd['product_code']]['pd_buy_num']!=''){
+			$buy_index='yes';
+			}
+			//echo'num_sell='.$_SESSION['num_sell'][$row_act_sell['act_sell_code']][$row_pd['product_code']]['pd_buy_num'];
+			if($buy_index=='yes'){
+			$product_data['add_cart_url']="window.location.href='cart_addshopcar.php'";
+			}else{
+			$product_data['add_cart_url']="window.location.href='".'cart_tr.php?m_action=add_cart&product_num='."$product_num"."'";
+			}
+			
+			//願望清單
+	
+			$product_data['wish_url']="window.location.href='".'wish_tr.php?m_action=add&product_num='."$product_num"."'";
+		
+		}else{
+			$product_data['add_cart_url']="javascript:alert('請登入會員!!');return false;";
+			$product_data['wish_url']="javascript:alert('請登入會員!!');return false;";
+		}
+
+
+		
+		$product_data['mem_lv']=$_SESSION['member']['mem_lv'];
+		$product_data['price']=$row_pd['price'];
+		$product_data['mem_price']=$mem_price;
+		$product_data['sp_price']=$sp_price;
+		$product_data['sell_price']=$sell_price;
+
+		
+		if($trace=='p'){
+			$product_data['pd_info']='';
+			$product_data['pd_summary']='';
+			//echo"$sql_act_sell".'<br /><br />';
+			//print_r($product_data);
+		}
+		if($trace=='all'){
+			/* echo'<br /><br />';
+			//echo'$sql_act_sell='.$sql_act_sell.'<br /><br />';
+			//echo'$num_act_sell='.$num_act_sell.'<br /><br />';
+			echo'$m_action='.$m_action.'<br />';
+			echo'會員等級='.$_SESSION['member']['mem_lv'].'<br />';
+			echo'原價='.$row_pd['price'].'<br />';
+			echo'會員價='.$mem_price.'<br />';
+			echo'特賣價='.$sp_price.'<br />';
+			echo'販售價='.$sell_price.'<br />'; */
+			return $product_data;
+		}
+		
+		
+		//原價
+		if($trace=='price'){
+			return $product_data['price']; 
+		}	
+		//賣價
+		if($trace=='sell_price'){
+			return $product_data['sell_price']; 
+		}
+		//會員價
+		if($trace=='mem_price'){
+			return $product_data['mem_price']; 
+		}
+		
+		
+		
+	}
+	
+	
+	function formatMoney($number, $cents = 1) { // cents: 0=never, 1=if needed, 2=always
+	  if (is_numeric($number)) { // a number
+		if (!$number) { // zero
+		  $money = ($cents == 2 ? '0.00' : '0'); // output zero
+		} else { // value
+		  if (floor($number) == $number) { // whole number
+			$money = number_format($number, ($cents == 2 ? 2 : 0)); // format
+		  } else { // cents
+			$money = number_format(round($number, 2), ($cents == 0 ? 0 : 2)); // format
+		  } // integer or decimal
+		} // value
+		return '$'.$money;
+	  } // numeric
+	} // formatMoney
+
 	//取得最大sort的值
 	function sortMax($cms_mode,$db_name,$sortmax_where,$field_name='no',$trace){
+		$sql="SELECT COUNT(1) AS total_num FROM `$db_name` $sortmax_where";
+		$rs=@mysql_query($sql);
+		$row=@mysql_fetch_array($rs,MYSQL_NUM);
+		if($trace=='1'){
+			echo"$cms_mode".'<br>';
+			echo"$sql".'<br>';
+		}
+		if($row['0']==0 || $row['0']=='NULL'){
+			return 1;	
+		}else{
+			if($cms_mode=='edit'){
+			return $row['0'];	
+			}else{
+			return ($row['0']+1);
+			}
+			
+		}
+
+     }
+	
+	//取得最大sort的值
+	function sortMaxNum($cms_mode,$db_name,$sortmax_where,$field_name='no',$trace){
 		$sql="SELECT COUNT(1) AS total_num FROM `$db_name` $sortmax_where";
 		$rs=mysql_query($sql);
 		$row=mysql_fetch_array($rs,MYSQL_NUM);
@@ -59,7 +412,13 @@
 			return false;
 		}
 	}
-	
+	function strExistPv($o_str,$check_str){
+		if (false !== ($rst = strpos(','.$o_str.',',','.$check_str.','))) {
+			echo 'true';
+		} else {
+			echo 'false';
+		}
+	}
 	function strExist2($o_str,$check_str){
 		if (false !== ($rst = strpos($o_str,$check_str))) {
 			return true;
@@ -102,7 +461,7 @@
 			return false;	
 		}
 		while(list($key, $value) = each($sql_data)) {
-			$txt.= ",`".$key."`='".mysql_real_escape_string($value)."'";
+			$txt.= ",`".$key."`='".$value."'";
 		}	
 		$sql="UPDATE `".$db_name."` SET ";
 		$sql.=substr($txt, 1);		
@@ -163,7 +522,15 @@
 		echo $return_code;
 	}
 
+	function get_chinese_time($datetime){
+		$time_tr=strtotime($datetime);
+		$weekday  = date('w', $time_tr);
+		$weeklist = array('日', '一', '二', '三', '四', '五', '六');
 
+		if(date("A",$time_tr)=='AM'){ $time_h='上午';}else{$time_h='下午';}
+
+		echo date("Y年n月j日",$time_tr).' 星期'.$weeklist[$weekday]." $time_h".date("g時i分s秒",$time_tr);
+	}
 
     //產生亂數
 	function randomStr($random){
@@ -245,8 +612,12 @@
 	function getIshow($value){
 		if($value=="1"){
 			echo"上架";
-		}else{
+		}
+		if($value=="0"){
 			echo"下架";
+		}
+		if($value=="9"){
+			echo"待審查";
 		}
 	}
 	
@@ -343,6 +714,13 @@
 		}
 	}
 	
+	function chkStrSelected($o_str,$check_str){
+		if (false !== ($rst = strpos(','.$o_str.',',','.$check_str.','))) {
+			echo 'selected="selected"';
+		} else {
+			echo '';
+		}
+	}
 	
 	function chkIshow($value1){
 		if($value1=="1"){

@@ -1,55 +1,48 @@
 <?php
-ini_set("error_reporting", "E_ALL & ~E_NOTICE");
-date_default_timezone_set("Asia/Taipei");
+ini_set('default_charset','utf-8');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-if ($expire == 0) {
-	$expire = ini_get('session.gc_maxlifetime');
-} else {
-	ini_set('session.gc_maxlifetime', 28800);
-}
-if (empty($_COOKIE['PHPSESSID'])) {
-	@session_set_cookie_params($expire);
-	@session_start();
-} else {
-	@session_start();
-	@setcookie('PHPSESSID', session_id(), time() + 28800);
-}
-//@session_start();
-
-// 1. 資料庫連線設定
 if (stristr($_SERVER['HTTP_HOST'], 'local') || (substr($_SERVER['HTTP_HOST'], 0, 7) == '192.168')) {
-	$host     = '127.0.0.1';
-	$db       = 'demo_template';  // 請替換為您的資料庫名稱
-	$user     = 'root';          // 請替換為您的資料庫帳號
-	$password = 'root'; // 請替換為您的資料庫密碼
-	$charset  = 'utf8mb4';
+  define("DB_HOST", "localhost");
+  define("DB_NAME", "demo_template");
+  define("DB_USER", "root");
+  define("DB_PASSWORD", "root");
+  define("WEB_ROOT", "http://localhost/php5/cart_api/"); // 網站路徑	
+  define("WEB_ADMIN", WEB_ROOT . 'admin/'); //http://neocity.com.tw/
 } else {
-	$host     = '127.0.0.1';
-	$db       = 'demo_template';  // 請替換為您的資料庫名稱
-	$user     = 'root';          // 請替換為您的資料庫帳號
-	$password = 'root'; // 請替換為您的資料庫密碼
-	$charset  = 'utf8mb4';
+  define("DB_HOST", "localhost");
+  define("DB_NAME", "lerevepa_demo");
+  define("DB_USER", "lerevepa_cvizir");
+  define("DB_PASSWORD", "1q2w3e4r");
+  //define("DB_PASSWORD","peter919");
+  define("WEB_ROOT", "http://www.lereveparis.com/lereve/"); //http://neocity.com.tw/
+  define("WEB_ADMIN", WEB_ROOT . 'admin/'); //http://neocity.com.tw/
 }
 
+function startDB()
+{
+  // mysql_pconnect(DB_HOST, DB_USER, DB_PASSWORD);
+  // mysql_select_db(DB_NAME);
+  // mysql_query("set names utf8");
 
+  $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
 
+  // 檢查連線
+  if (!$conn) {
+    die("連線失敗: " . mysqli_connect_error());
+  }
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-$options = [
-	PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // 錯誤拋出例外
-	PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // 預設取得關聯陣列
-	PDO::ATTR_EMULATE_PREPARES   => false,                  // 停用模擬預處理，提高安全性
-];
+  // 設定字元集 (解決之前看到的 utf8 亂碼或錯誤問題)
+  mysqli_set_charset($conn, "utf8mb4");
 
-try {
-	$pdo = new PDO($dsn, $user, $password, $options);
-} catch (\PDOException $e) {
-	// 若連線失敗，回傳錯誤的 JSON 格式
-	echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);
-	exit;
+  echo "資料庫連線成功！";
+
 }
 
-
-$now_time = date("Y-m-d H:i:s"); //顯示當前時
-
-?>
+// 網站實體路徑	
+define("SITE_ROOT", dirname(dirname(__FILE__)));
+define("ADMIN_TITLE", "CART 後台管理");
+define("SITE_TITLE", "CART");
+//啟動資料庫
