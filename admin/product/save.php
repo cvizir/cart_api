@@ -3,230 +3,137 @@ include_once("../session.php");
 require_once("../../include/config.inc.php");
 require_once("../../include/function.php");
 require_once("../../include/DBClass.php");
+if (!$pdo instanceof PDO) {
+  die("Database connection failed.");
+}
+// 接收基本變數
+$cms_mode = isset($_REQUEST['cms_mode']) ? $_REQUEST['cms_mode'] : '';
+$no = isset($_REQUEST['no']) ? trim($_REQUEST['no']) : '';
+$product_code = isset($_REQUEST['product_code']) ? trim($_REQUEST['product_code']) : '';
+$page = isset($_REQUEST['page']) ? trim($_REQUEST['page']) : 1;
+$add_pic = isset($_FILES['add_pic']) ?$_FILES['add_pic'] : null;
+$del_pic = isset($_POST['del_pic']) ?$_POST['del_pic'] : [];
 
-$cms_mode = $_REQUEST['cms_mode'];
-$no = trim($_REQUEST['no']);
-$product_code = trim($_REQUEST['product_code']);
-$page = trim($_REQUEST['page']);
-$add_pic = $_FILES['add_pic'];
-$del_pic = $_POST['del_pic'];
-$size_file = $_FILES['size_file'];
-$user_file = $_FILES['user_file'];
+// 設定圖片上傳實體路徑
 $filePath = dirname(dirname(dirname(__FILE__))) . "/images/upload/product/";
-//print_r($del_pic);
-$sh_post = 'sh_pdcat_code=' . $_REQUEST['pdcat_code'];
+$sh_pdcat_param = isset($_REQUEST['pdcat_code']) && is_array($_REQUEST['pdcat_code']) ? implode(',', $_REQUEST['pdcat_code']) : '';
+$sh_post = 'sh_pdcat_code=' . urlencode($sh_pdcat_param);
 
-$pdcat_code = ',' . @join(",", $_REQUEST['pdcat_code']) . ',';
+// 商品類別字串串接
+$pdcat_code = isset($_REQUEST['pdcat_code']) && is_array($_REQUEST['pdcat_code']) 
+  ? ',' . implode(",", $_REQUEST['pdcat_code']) . ',' 
+  : ',,';
 
-$_REQUEST['uptime'] = date("Y-m-d H:i:s"); //顯示當前時
-if ($_REQUEST['start_time'] == "") {
-  $start_time = '0000-00-00 00:00:00';
-} else {
-  $start_time = $_REQUEST['start_time'];
-}
-if ($_REQUEST['end_time'] == "") {
-  $end_time = '2020-00-00 00:00:00';
-} else {
-  $end_time = $_REQUEST['end_time'];
-}
+$uptime = date("Y-m-d H:i:s");
+$release_date = isset($_REQUEST['release_date']) ? trim($_REQUEST['release_date']) : date("Y-m-d");
 
-$_REQUEST['o_price'] = 9999;
-$text = $_REQUEST['push_product_code']; //获取值
-$text = nl2br($text);
-$textArr = explode("<br />", $text); //"<br />"作为分隔切成数组
-//print_r($textArr);
-//除去数组中的空格
-for ($I = 0; $I < sizeof($textArr); $I++) {
-  if (str_replace(array("\r", "\n", "\r\n", "\n\r"), '', $textArr[$I]) != '') {
-    $newArr[] = $textArr[$I];
-  }
-}
-print_r($newArr);
-$push_product_code = @join(",", $newArr);
-$push_product_code = str_replace(array("\r", "\n", "\r\n", "\n\r"), '', $push_product_code);
+$o_price = 9999;
 
+// 處理推薦商品編號換行切換為逗號
+$text = isset($_REQUEST['push_product_code']) ?$_REQUEST['push_product_code'] : '';
+$textArr = preg_split('/[\r\n]+/',$text);
+$newArr = array_filter(array_map('trim',$textArr));
+$push_product_code = implode(",", $newArr);
 
 $db_name = 'product';
-$web_url = "list.php?$sh_post";
-$trace = 0;
+$web_url = "list.php?{$sh_post}";
+$trace = 1;
 
-$sql_data = array(
-  'uptime' => $_REQUEST['uptime'],
-  'product_code' => $_REQUEST['product_code'],
-  'product_num' => $_REQUEST['product_num'],
-  'new_pd_date' => $_REQUEST['new_pd_date'],
-  'bar_code' => $_REQUEST['bar_code'],
-  'isbn' => $_REQUEST['isbn'],
-  'pd_title' => $_REQUEST['pd_title'],
-  'name' => mysql_real_escape_string($_REQUEST['name']),
-  'pd_stock' => $_REQUEST['pd_stock'],
-  'pd_size' => $_REQUEST['pd_size'],
-  'pd_age' => $_REQUEST['pd_age'],
-  'pd_author' => $_REQUEST['pd_author'],
-  'pd_publishing' => $_REQUEST['pd_publishing'],
-  'pd_publish_date' => $_REQUEST['pd_publish_date'],
-  'pd_weight' => $_REQUEST['pd_weight'],
-  'pd_series' => $_REQUEST['pd_series'],
-  'pd_mode' => $_REQUEST['pd_mode'],
-  'pdcat_code' => $pdcat_code,
-  'o_price' => $_REQUEST['o_price'],
-  'price' => $_REQUEST['price'],
-  'addpd_price' => $_REQUEST['addpd_price'],
-  'hot_item' => $_REQUEST['hot_item'],
-  'you_tube_code' => $_REQUEST['you_tube_code'],
-  'pd_info' => $_REQUEST['pd_info'],
-  'pd_summary' => $_REQUEST['pd_summary'],
-  'pd_get' => $_REQUEST['pd_get'],
-  'discount_code' => $_REQUEST['discount_code'],
-  'push_product_code' => $push_product_code,
-  'addpd_title' => $_REQUEST['addpd_title'],
-  'photo' => 'product_' . $_REQUEST['product_num'] . '_1.jpg,,,,,,,,,',
-  'ps' => $_REQUEST['ps'],
-  'm_sort' => $_REQUEST['m_sort'],
-  'ishow' => $_REQUEST['ishow']
-);
+// 組合要新增或更新的欄位資料陣列 (不需呼叫 mysql_real_escape_string)
+$sql_data = [
+  'uptime'            => $uptime,
+  'product_code'      => isset($_REQUEST['product_code']) ?$_REQUEST['product_code'] : '',
+  'name'              => isset($_REQUEST['name']) ?$_REQUEST['name'] : '',
+  'pd_stock'          => (isset($_REQUEST['pd_stock']) && is_numeric($_REQUEST['pd_stock'])) ? (int)$_REQUEST['pd_stock'] : 0,
+  'pdcat_code'        => $pdcat_code,
+  'o_price'           => (isset($_REQUEST['o_price']) && is_numeric($_REQUEST['o_price'])) ? (int)$_REQUEST['o_price'] : 0,
+  'price'             => (isset($_REQUEST['price']) && is_numeric($_REQUEST['price'])) ? (int)$_REQUEST['price'] : 0,
+  'hot_item'          => isset($_REQUEST['hot_item']) ?$_REQUEST['hot_item'] : 0,
+  'you_tube_code'     => isset($_REQUEST['you_tube_code']) ? $_REQUEST['you_tube_code'] : '',
+  'pd_info'           => isset($_REQUEST['pd_info']) ?$_REQUEST['pd_info'] : '',
+  'photo'             => isset($_REQUEST['photo']) ? $_REQUEST['photo'] : '',
+  'ps'                => isset($_REQUEST['ps']) ? $_REQUEST['ps'] : '',
+  'release_date'      => $release_date,
+  'm_sort'            => (isset($_REQUEST['m_sort']) && is_numeric($_REQUEST['m_sort'])) ? (int)$_REQUEST['m_sort'] : 1,
+  'ishow'             => (isset($_REQUEST['ishow']) && is_numeric($_REQUEST['ishow'])) ? (int)$_REQUEST['ishow'] : 0
+];
 
-$check_txt = 'product_' . $cms_mode;
-$all_str = $_SESSION["admin_pv"];
 
-if ($cms_mode == 'add') {
-  $sql_product = "SELECT * FROM `product` WHERE `bar_code`='" . $_REQUEST['bar_code'] . "'";
-  $rs_product = mysql_query($sql_product);
-  $num_product = mysql_num_rows($rs_product);
-  echo "$sql_product";
-  if ($num_product >= 1) {
-    $cms_mode = 're_add';
-  }
-}
-//echo'$cms_mode='."$cms_mode";
+$insert_id = '';
+$msg = '';
 
+// 依照動作模式分支
 switch ($cms_mode) {
   case 'add':
-    //$sql_data['product_code']=createCode($tb_name,'product_code',11);
-    $sql_data['product_code'] = $_REQUEST['product_num'];
-    $insert_id = insertArray($db_name, $sql_data, $trace);
+    $sql_data['product_code'] = createCode($db_name, 'product_code', 9);
+    $sql_data['photo'] = 'product_' .$_REQUEST['product_num'] . '_1.jpg,,,,,,,,,';
+    insertArray($db_name,$sql_data, $trace);
     $insert_id = $sql_data['product_code'];
     $msg = "新增成功!";
     break;
+
   case 're_add':
     $msg = "此商品已經新增過了!!";
     break;
 
   case 'edit':
-    $where_str = " WHERE `no`='$no'";
-    updataArray($db_name, $where_str, $sql_data, $trace);
+    // 依 primary key 更新
+    $where_str = " WHERE `no` = " . $pdo->quote($no);
+    updataArray($db_name,$where_str, $sql_data,$trace);
+    $insert_id =$product_code;
     $msg = "更新成功!!";
-    $insert_id = $product_code;
     break;
 
   case 'del':
-    $where_str = " WHERE `no`='$no'";
-    deleteDb($db_name, $where_str, $sql_data, $trace);
+    // 透過預處理語句刪除資料
+    $stmt_del =$pdo->prepare("DELETE FROM `product` WHERE `no` = ?");
+    $stmt_del->execute([$no]);
     $msg = "刪除成功!!";
 
-
+    // 刪除實體檔案
     for ($I = 1; $I <= 8; $I++) {
-      $filename = $filePath . 'product_' . $product_code . '_' . $I . '.jpg';
-      @unlink($filename);
-      $filename_2 = $filePath . 'product_' . $product_code . '_' . $I . '.png';
-      @unlink($filename_2);
+      @unlink($filePath . 'product_' . $product_code . '_' .$I . '.jpg');
+      @unlink($filePath . 'product_' . $product_code . '_' .$I . '.png');
     }
-
-
     break;
-
-  default:
 }
 
-/* $sort_new_value=trim($_REQUEST['m_sort']);
-	$sort_old_value=trim($_REQUEST['sort_old_value']);
-	
-	$sort_sql_where=" WHERE `pdcat_code`='".$_REQUEST['pdcat_code']."'";
-	changSortSet($cms_mode,$db_name,$sort_sql_where,$field_name='m_sort',$sort_new_value,$sort_old_value,$trace);
-	 */
-
-
-
-$sql_product = "SELECT * FROM `product` WHERE `pdcat_code`='" . $_REQUEST['pdcat_code'] . "' ORDER BY m_sort ASC ,uptime DESC , no DESC";
-$rs_product = mysql_query($sql_product);
-$num_product = mysql_num_rows($rs_product);
-$I = 1;
-while ($row_product = mysql_fetch_array($rs_product, MYSQL_ASSOC)) {
-  $sql_update = "UPDATE `product` SET `m_sort` = '$I' WHERE `product_code` ='" . $row_product['product_code'] . "'";
-  mysql_query($sql_update);
-  $I++;
-
-  //echo"$sql_update".'<br /><br />';
-}
-
-
-
-if ($cms_mode == 'add' || $cms_mode == 'edit') {
-  //echo'$insert_id='."$insert_id";
-  $xid = 'product_' . $insert_id . '_';
-  $filePath = dirname(dirname(dirname(__FILE__))) . "/images/upload/product/";
-
-  $photo_array = @explode(",", $_REQUEST['photo']);
-
-
+// 圖片上傳與刪除勾選處置
+if (($cms_mode == 'add' || $cms_mode == 'edit') && !empty($insert_id)) {$xid = 'product_' . $insert_id . '_';$photo_array = isset($_REQUEST['photo']) ? explode(",", $_REQUEST['photo']) : array_fill(0, 10, '');
 
   for ($I = 0; $I <= 9; $I++) {
-    $pic_num++;
-    if ($add_pic['type'][$I] == 'image/png') {
-      $pic_name = "$xid" . "$pic_num" . ".png";
-    } else {
-      $pic_name = "$xid" . "$pic_num" . ".jpg";
-    }
-    if ($I == 0) {
-      $small = array(array("$pic_name", "a",  "640", "640"));
-    } else {
-      $small = array(array("$pic_name", "a",  "640", "640"));
-    }
+    $pic_num =$I + 1;
+    $ext = (isset($add_pic['type'][$I]) && $add_pic['type'][$I] == 'image/png') ? '.png' : '.jpg';
+    $pic_name =$xid . $pic_num .$ext;
+    $small = [["$pic_name", "a", "640", "640"]];
 
-    if ($del_pic[$I] == "1") {
+    // 若使用者勾選刪除此圖
+    if (isset($del_pic[$I]) && $del_pic[$I] == "1") {
       $photo_array[$I] = '';
-    } else {
-      //print_r($small[$I]);
-      if ($add_pic['tmp_name'][$I] <> "") {
-        $photo_text = $pic_name;
-        //uploadedPhotoPathx($add_pic["tmp_name"][$I], $filePath, $small[$I]);
-        uploadedPhotoPathR($add_pic["tmp_name"][$I], $filePath, $add_pic["type"][$I], $rotate[$I], $small);
-        $photo_array[$I] = $pic_name;
-      } else {
-        if ($photo_array[$I] == "") {
-          $photo_array[$I] = "";
-        }
-      }
+      @unlink($filePath . $xid .$pic_num . '.jpg');
+      @unlink($filePath . $xid .$pic_num . '.png');
+    } elseif (!empty($add_pic['tmp_name'][$I])) {
+      // 處理新上傳圖片
+      uploadedPhotoPathR($add_pic["tmp_name"][$I],$filePath, $add_pic["type"][$I], 0, $small);$photo_array[$I] =$pic_name;
     }
   }
-  $photo_text = join(",", $photo_array);
-
-  $sql_updata = "UPDATE `$db_name` SET `photo` = '$photo_text' WHERE `product_code` ='$insert_id'";
-  mysql_query($sql_updata);
-  //echo $photo_text;
-  $pic_num = 1;
-  for ($I = 0; $I <= 7; $I++) {
-
-    if ($photo_array[$I] == '') {
-      $filename = $filePath . 'product_' . $insert_id . '_' . $pic_num . '.jpg';
-      @unlink($filename);
-      $filename_2 = $filePath . 'product_' . $insert_id . '_' . $pic_num . '.png';
-      @unlink($filename_2);
-    }
-    $pic_num++;
-  }
-
-
-  /* 
-	print_r($photo_array);
-    echo'$sql_updata='."$sql_updata";
-	*/
+  
+  // 更新資料庫中的 photo 欄位
+  $photo_text = implode(",", $photo_array);
+  $stmt_photo =$pdo->prepare("UPDATE `{$db_name}` SET `photo` = ? WHERE `product_code` = ?");
+  $stmt_photo->execute([$photo_text,$insert_id]);
 }
-
-
 ?>
-<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-<script language="JavaScript" type="text/JavaScript">
-  alert("<?= $msg ?>");
-	window.location.href="<?php echo $web_url; ?>";
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!-- 
+<script type="text/javascript">
+  alert("<?= addslashes($msg) ?>");
+  window.location.href = "<?= $web_url ?>";
+</script> 
+-->
+</head>
+<body></body>
+</html>
