@@ -10,7 +10,7 @@ if (!$pdo instanceof PDO) {
 $del_pd_file = isset($_GET['del_pd_file']) ? $_GET['del_pd_file'] : '';
 $page = !empty($_GET["page"]) ? (int)$_GET["page"] : 1;
 $pagesize = 50;
-$trace = 0;
+$trace = 1;
 
 $sh_pdcat_code = isset($_REQUEST["sh_pdcat_code"]) ? $_REQUEST["sh_pdcat_code"] : '';
 $sh_publishing_code = isset($_REQUEST["sh_publishing_code"]) ? $_REQUEST["sh_publishing_code"] : '';
@@ -23,42 +23,10 @@ $sh_post = '&sh_pdcat_code=' . urlencode($sh_pdcat_code) . '&sh_txt=' . urlencod
 $argument = $sh_post;
 $order = " ORDER BY no DESC";
 
-// 動態安全組合 WHERE 與綁定參數
-$sh_array = [];
-$params = [];
-
-if ($sh_pdcat_code != '') {
-  $sh_array[] = "`pdcat_code` LIKE ?";
-  $params[] = '%' . $sh_pdcat_code . '%';
-}
-if ($sh_publishing_code != '') {
-  $sh_array[] = "`pd_publishing` = ?";
-  $params[] = $sh_publishing_code;
-}
-if ($sh_qty != '') {
-  $sh_array[] = "`pd_stock` <= ?";
-  $params[] = $sh_qty;
-}
-if ($sh_status != '') {
-  $sh_array[] = "`ishow` = ?";
-  $params[] = $sh_status;
-}
-
-if (!empty($sh_array)) {
-  $where = " WHERE " . implode(" AND ", $sh_array);
-} else {
-  $where = '';
-}
-
 // 模糊關鍵字搜尋
 if ($sh_txt != '') {
-  $where = " WHERE (`product_num` LIKE ? OR `name` LIKE ? OR `bar_code` LIKE ? OR `pd_info` LIKE ? OR `pd_summary` LIKE ?)";
-  $params = ["%{$sh_txt}%", "%{$sh_txt}%", "%{$sh_txt}%", "%{$sh_txt}%", "%{$sh_txt}%"];
-}
-
-// 刪除暫存匯入檔案
-if ($del_pd_file == 'del_pd_file' && file_exists('../book/book.xlsx')) {
-  unlink('../book/book.xlsx');
+  $where = " WHERE (`product_code` LIKE ? OR `name` LIKE ? OR `pd_info` LIKE ? )";
+  $params = ["%{$sh_txt}%", "%{$sh_txt}%", "%{$sh_txt}%",];
 }
 
 // 實例化分頁查詢物件
@@ -123,47 +91,11 @@ $total = $listData['total'];
                         <table width="90%" border="0" align="center" cellpadding="0" cellspacing="0">
                           <tr>
                             <form action="" method="GET">
-                              <td width="90%" height="30" valign="middle">出 版 社：
-                                類別：
-                                <select name="sh_pdcat_code" id="sh_pdcat_code">
-                                  <option value="" <?php chkSelected("", $sh_status) ?>>全部商品</option>
-                                  <?php
-                                  // 使用 PDO 讀取商品分類下拉選單
-                                  $sql_product_cat = "SELECT a.name AS m_name, b.* FROM pdcat_m a RIGHT OUTER JOIN pdcat b ON a.pdcat_m_code = b.pdcat_m_code ORDER by a.pdcat_m_code";
-                                  $stmt_cat = $pdo->query($sql_product_cat);
-                                  while ($row_product_cat = $stmt_cat->fetch(PDO::FETCH_ASSOC)) {
-                                  ?>
-                                    <option value="<?= htmlspecialchars($row_product_cat['pdcat_code']); ?>" <?php chkSelected($row_product_cat['pdcat_code'], $sh_pdcat_code) ?>>
-                                      <?= htmlspecialchars($row_product_cat['m_name'] . '-' . $row_product_cat['name']); ?>
-                                    </option>
-                                  <?php } ?>
-                                </select>&nbsp;&nbsp;
-                                庫存小於查詢：
-                                <input name="sh_qty" type="text" value="<?= htmlspecialchars($sh_qty) ?>" size="6" maxlength="4">&nbsp;&nbsp;
-                                狀態：
-                                <select name="sh_status" id="sh_status">
-                                  <option value="" <?php chkSelected("", $sh_status) ?>>請選擇</option>
-                                  <option value="1" <?php chkSelected(1, $sh_status) ?>>上架</option>
-                                  <option value="0" <?php chkSelected(0, $sh_status) ?>>下架</option>
-                                  <option value="9" <?php chkSelected(9, $sh_status) ?>>待審查</option>
-                                </select>&nbsp;&nbsp;
-                                <input type="submit" name="button" id="button" value="送出">
-                              </td>
-                            </form>
-                          </tr>
-                          <tr>
-                            <form action="" method="GET">
                               <td height="30" colspan="1" valign="middle">模糊查詢：
                                 <input name="sh_txt" type="text" value="<?= htmlspecialchars($sh_txt) ?>" size="46">&nbsp;&nbsp;
                                 <input type="submit" name="button" id="button" value="送出">
                               </td>
                             </form>
-                          </tr>
-                          <tr>
-                            <td height="30" colspan="1" valign="middle">
-                              <input type="button" name="button2" id="button2" onClick="location.href='list.php'" value="搜尋重置">
-                              <input type="button" name="button3" id="button3" onClick="location.href='list.php?del_pd_file=del_pd_file'" value="刪除匯入檔">
-                            </td>
                           </tr>
                         </table>
                       </div>

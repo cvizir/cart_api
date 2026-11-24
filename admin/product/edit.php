@@ -84,10 +84,14 @@ if (empty($product['pd_mode'])) {
             <tr>
               <td height="300" align="center" valign="top">
                 <form action="save.php?<?= htmlspecialchars($sh_post) ?>" method="post" id="form1" enctype="multipart/form-data" name="CodeForm">
-                  <table width="90%" border="1" cellpadding="4" cellspacing="0" bordercolor="#CCCCCC">
+                  <table width="90%" border="1" style="margin-top: 30px;" cellpadding="4" cellspacing="0" bordercolor="#CCCCCC">
                     <tr>
                       <td class="tb_edit_title">上次修改時間</td>
                       <td class="tb_edit_info"><?= isset($product['uptime']) ? $product['uptime'] : '' ?>&nbsp;</td>
+                    </tr>
+                    <tr>
+                      <td class="tb_edit_title">商品編號</td>
+                      <td class="tb_edit_info"><?= isset($product['product_code']) ? $product['product_code'] : '' ?>&nbsp;</td>
                     </tr>
                     <tr>
                       <td width="15%" class="tb_edit_title">名稱</td>
@@ -103,13 +107,19 @@ if (empty($product['pd_mode'])) {
                     <tr>
                       <td class="tb_edit_title">商品類別</td>
                       <td class="tb_edit_info">
-                        <div style="width:100%; height:200px; overflow:scroll;overflow-x: hidden;">
+                        <select name="pdcat_code" id="pdcat_code">
+                          <option value="" <?php chkSelected("", $product['pdcat_code']) ?>>全部商品</option>
                           <?php
-                          $stmt_pdcat = $pdo->query("SELECT * FROM `pdcat` WHERE `pdcat_code` = '{$product['pdcat_code']}'");
-                          $row_pdcat = $stmt_pdcat->fetch(PDO::FETCH_ASSOC);
-                          echo "<input type='hidden' name='pdcat_code' value='" . htmlspecialchars($row_pdcat['name']) . "'>";
+                          // 使用 PDO 讀取商品分類下拉選單
+                          $sql_pd_cat = "SELECT * FROM `pdcat`";
+                          $stmt_cat = $pdo->query($sql_pd_cat);
+                          while ($row_pd_cat = $stmt_cat->fetch(PDO::FETCH_ASSOC)) {
                           ?>
-                        </div>
+                            <option value="<?php echo $row_pd_cat['pdcat_code']; ?>" <?php chkSelected($row_pd_cat['pdcat_code'], $product['pdcat_code']) ?>>
+                              <?php echo $row_pd_cat['name']; ?>
+                            </option>
+                          <?php } ?>
+                        </select>
                       </td>
                     </tr>
                     <tr>
@@ -158,27 +168,29 @@ if (empty($product['pd_mode'])) {
                         </script>
                         <div id="div_photo_upload">
                           <?php
-                          $photo_array = isset($product['photo']) ? explode(",", $product['photo']) :  ['', '', '', '', '', ''];
-                          $photo_ps = ['', '', '', '', '', ''];
-                          for ($I = 0; $I < 6; $I++) {
-                            $pix = ($I - 1);
-                            $filename = '../../images/upload/product/' . $photo_array[$pix];
-                            if (!file_exists($filename)  || $photo_array[$pix] == '') {
+                          $photo_array = isset($product['photo']) && $product['photo'] != '' ? explode(",", $product['photo']) :  ['', '', '', '', '', '', '', ''];
+                          $photo_ps = ['', '', '', '', '', '', '', ''];
+                          for ($I = 0; $I < 8; $I++) {
+                            if (!isset($photo_array[$I])) {
+                              $photo_array[$I] = '';
+                            }
+                            $filename = '../../images/upload/product/' . $photo_array[$I];
+                            if (!file_exists($filename) || $photo_array[$I] == '') {
                               $filename = 'images/no_pic.gif';
                             }
                           ?>
                             <div style="width:45%; height:450px;; float:left; margin:10px;">
                               <ul>
                                 <li>
-                                  <input type="checkbox" name="del_pic[<?php echo "$pix"; ?>]" value="1">
+                                  <input type="checkbox" name="del_pic[<?php echo "$I"; ?>]" value="1">
                                   刪除此產品圖片
-                                  <?php if ($photo_ps[$I] <> "") {
+                                  <?php if ($photo_ps[$I] <> '') {
                                     echo '(' . $photo_ps[$I] . ')';
                                   } ?>
                                 </li>
                                 <li>
-                                  <input id="input_file_<?php echo "$pix"; ?>" name="add_pic[<?php echo "$pix"; ?>]" type="file" size="19">
-                                  <input name="Submit2" type="button" value="清除" onClick="clearFile('input_file_<?php echo "$pix"; ?>');" />
+                                  <input id="input_file_<?php echo "$I"; ?>" name="add_pic[<?php echo "$I"; ?>]" type="file" size="19">
+                                  <input name="Submit2" type="button" value="清除" onClick="clearFile('input_file_<?php echo "$I"; ?>');" />
                                 </li>
                                 <li style="width:100%; height:auto;"><img src="<?php echo "$filename";  ?>" alt="" width="100%"></li>
                               </ul>
