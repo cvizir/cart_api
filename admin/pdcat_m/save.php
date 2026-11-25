@@ -19,7 +19,7 @@ $sort_old_value = $_REQUEST["sort_old_value"];
 
 $uptime = date("Y-m-d H:i:s"); //顯示當前時
 if ($_REQUEST['start_time'] == "") {
-  $start_time = '0000-00-00 00:00:00';
+  $start_time = '2000-01-01 00:00:00';
 } else {
   $start_time = $_REQUEST['start_time'];
 }

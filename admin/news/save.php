@@ -17,7 +17,7 @@ if ($_REQUEST['wttime'] == '') {
 }
 $uptime = date("Y-m-d H:i:s"); //顯示當前時
 if ($_REQUEST['start_time'] == "") {
-  $start_time = '0000-00-00 00:00:00';
+  $start_time = '2000-01-01 00:00:00';
 } else {
   $start_time = $_REQUEST['start_time'];
 }
@@ -82,39 +82,39 @@ switch ($cms_mode) {
 
 /*------------------------------------ 圖片處理 ----------------------------------------*/
 /* 	
-	$xid='news_'.$insert_id.'_'; 
-	$filePath = dirname(dirname(dirname(__FILE__)))."/images/upload/news/";	
+  $xid='news_'.$insert_id.'_'; 
+  $filePath = dirname(dirname(dirname(__FILE__)))."/images/upload/news/";	
 
-	$photo_array=explode(",",$_REQUEST['photo']);
-    
-	$pic_num=0;
-	for( $I=0; $I <= 1; $I++){
-	$pic_num++;
-	$pic_name="$xid"."$pic_num".".jpg";		
+  $photo_array=explode(",",$_REQUEST['photo']);
+
+  $pic_num=0;
+  for( $I=0; $I <= 1; $I++){
+  $pic_num++;
+  $pic_name="$xid"."$pic_num".".jpg";		
 
 
-		if($del_pic[$I]=="1"){
-			$photo_array[$I]='';
-			$del_filePath=$filePath.$pic_name;
-			echo"$del_filePath";
-			unlink($del_filePath);		
-		}else{
-		     //print_r($small[$I]);
-			$small = array(array("$pic_name", "wh",  "950", "400"));	
-			 
-			if($add_pic['tmp_name'][$I]<>""){
-				//echo $add_pic['tmp_name'][$I];
-				//echo $small;
-				uploadedPhotoPathx($add_pic["tmp_name"][$I], $filePath, $small);
-				$photo_array[$I]=$pic_name;
-			}else{
-				if($photo_array[$I]==""){$photo_array[$I]="";}
-			}			
-		}	
-	}
+    if($del_pic[$I]=="1"){
+      $photo_array[$I]='';
+      $del_filePath=$filePath.$pic_name;
+      echo"$del_filePath";
+      unlink($del_filePath);		
+    }else{
+         //print_r($small[$I]);
+      $small = array(array("$pic_name", "wh",  "950", "400"));	
 
-	$photo_text=join(",",$photo_array);
-	$sql_photo_updata="UPDATE `news` SET `photo` = '$photo_text' WHERE `news_code` ='$news_code'";
+      if($add_pic['tmp_name'][$I]<>""){
+        //echo $add_pic['tmp_name'][$I];
+        //echo $small;
+        uploadedPhotoPathx($add_pic["tmp_name"][$I], $filePath, $small);
+        $photo_array[$I]=$pic_name;
+      }else{
+        if($photo_array[$I]==""){$photo_array[$I]="";}
+      }			
+    }	
+  }
+
+  $photo_text=join(",",$photo_array);
+  $sql_photo_updata="UPDATE `news` SET `photo` = '$photo_text' WHERE `news_code` ='$news_code'";
     mysql_query($sql_photo_updata); 
  */
 if ($trace == '1') {
@@ -126,13 +126,7 @@ if ($trace == '1') {
 
 ?>
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-<?php
-if (function_exists('addAdminLog')) {
-  $info = '最新消息管理 <' . $msg . '> [news_code=' . $news_code . ']';
-  addAdminLog($_SESSION["admin_id"], $info);
-}
-?>
 <script language="JavaScript" type="text/JavaScript">
   alert("<?= $msg ?>");
-	window.location.href="<?php echo $web_url; ?>";
+  window.location.href="<?php echo $web_url; ?>";
 </script>
