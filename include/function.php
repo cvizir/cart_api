@@ -23,7 +23,7 @@ function sortMax($cms_mode, $db_name, $sortmax_where, $field_name = 'no', $trace
 /**
  * 新增/修改/刪除時的 sort 調整
  */
-function changSortSet($cms_mode, $db_name, $sort_sql_where, $field_name = 'm_sort', $sort_new_value, $sort_old_value, $trace = 0) {
+function changSortSet($cms_mode, $db_name, $sort_sql_where, $field_name, $sort_new_value, $sort_old_value, $trace = 0) {
   global $pdo;
   $sql_sort = "";
   if ($sort_new_value != $sort_old_value) {

@@ -14,7 +14,7 @@ $pagesize = 25;
 $argument = "";   // 分頁連結額外參數（目前沒有搜尋條件）
 $trace    = 0;
 $order    = " ORDER BY `ishow` DESC, `start_time` DESC ";
-$where   , 'news_et'); = "";
+$where    = "";
 $params   = array();
 
 $newsClass = new DBClass('article', $page, $pagesize);
@@ -25,6 +25,9 @@ $total     = $result['total'];
 // 編輯 / 刪除 / 新增 時帶給下一頁的參數
 $sh_post = "&page=" . $page . "&pagesize=" . $pagesize . "&total=" . $total . $argument;
 
+// 前端的權限提示（真正的權限檢查仍在 save.php 的 checkAdmimPv 做）
+$admin_pv = isset($_SESSION["admin_pv"]) ? $_SESSION["admin_pv"] : '';
+$can_edit = empty($admin_pv_check) || strExist($admin_pv, 'news_et');
 ?>
 <html>
 <head>

@@ -60,6 +60,11 @@ $db_name = 'article';
 $trace   = 0;
 $now     = date("Y-m-d H:i:s");
 
+// 權限檢查（維持原本的呼叫方式）
+$check_txt  = 'article';
+$check_type = $cms_mode;
+checkAdmimPv($_SESSION["admin_pv"], $check_txt, $check_type, $trace);
+
 // 上下架時間：空白時給預設值（原本的 0000-00-00 與 2020-00-00 都不是合法日期，
 // 而且 2020 已經過去，會讓沒填下架日期的文章全部顯示「已結束」）
 $start_time = req('start_time');
@@ -205,6 +210,11 @@ $web_url = "list.php?page=" . $page;
 ?>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <?php
+// 後台操作紀錄
+if (function_exists('addAdminLog')) {
+  $log_info = '最新消息管理 <' . $msg . '> [news_code=' . $news_code . ']';
+  addAdminLog(isset($_SESSION["admin_id"]) ? $_SESSION["admin_id"] : '', $log_info);
+}
 
 // 成功 → 回列表；失敗 → 回上一頁保留表單內容
 alertHref($msg, $ok ? $web_url : "");

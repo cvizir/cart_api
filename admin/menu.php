@@ -21,7 +21,7 @@
     <td align="center"><a class="menu_url" href="<?php echo WEB_ADMIN; ?>spec_info/list.php">規格管理</a></td>
   </tr>
   <tr>
-    <td align="center"><a class="menu_url" href="<?php echo WEB_ADMIN; ?>gift_exchange/list.php">產品尺寸</a></td>
+    <td align="center"><a class="menu_url" href="<?php echo WEB_ADMIN; ?>article/list.php">BLOG</a></td>
   </tr>
   <tr>
     <td align="center"><a class="menu_url" href="<?php echo WEB_ADMIN; ?>member/list.php">會員</a></td>
