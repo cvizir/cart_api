@@ -1,655 +1,306 @@
 <?php
+ini_set("memory_limit", "256M");
+set_time_limit(900);
 
-	ini_set("memory_limit","100M");
-	set_time_limit(900);
+require_once("../../include/config.inc.php");
+include_once("../session.php");     // 原本沒有載入，任何人只要知道網址就能下載訂單明細（含姓名、電話、地址）
+require_once("../../include/function.php");
+require_once('../../class/PHPExcel.php');
+require_once('../../class/PHPExcel/IOFactory.php');
 
-	$test_mode=0;
- 	require_once("../../config.php");
-	require_once("../../include/function.php");
-	require_once('../../class/PHPExcel.php');
-	require_once('../../class/PHPExcel/Writer/Excel5.php');
-	require_once('../../class/PHPExcel/IOFactory.php');
-	
+// 付款方式對照表：原本由舊的 config.php 提供，新的 config.inc.php 沒有，這裡補上預設值
+if (!isset($pay_mode_array)) {
+  $pay_mode_array = array('card' => '信用卡', 'atm' => 'ATM轉帳', 'store_pay' => '超商付款',
+                          'line_pay' => 'Line Pay付款', 'post' => '郵政劃撥', 'foreign' => '國外訂購');
+}
 
-	$esend_array=array('0'=>'不願意','1'=>'願意',); 	
+/* ------------------------------ 小工具 ------------------------------ */
 
-	$no= $_REQUEST['no'];
-	$start_time= $_REQUEST['start_time'];
-	$end_time= $_REQUEST['end_time'];
-	$sh_state= $_REQUEST['sh_state'];
-	
-	
-	
+// 取陣列的值，不存在就回傳空字串
+function g($arr, $key) {
+  return (is_array($arr) && isset($arr[$key])) ? $arr[$key] : '';
+}
 
-	if($no!=''){
-	    $where=" WHERE `no`='$no'";
-	}else{
-		
-		if($start_time!='' || $end_time!='' || $sh_state!=''){
-			$where=" WHERE";
-			
-			if($start_time!=''){
-				$where= $where." AND `buytime`>='".$start_time."'";
-			}
-			if($end_time!=''){
-				$where= $where." AND `buytime`<='".$end_time."'";
-			}
-			if($sh_state!=''){
-				$where= $where." AND `order_state`='".$sh_state."'";
-			}	
-			$where=str_replace("WHERE AND", "WHERE",$where);
-		}
-		
-			
-	}
-	$sql_order="SELECT * FROM `orderlist` ".$where." ORDER BY buytime DESC";
-	
-	//$sql_order="SELECT * FROM `orderlist` ORDER BY no DESC LIMIT 5";
-	// echo"$sql_order";
+// 數字相乘；不是數字就當 0
+function mul($a, $b) {
+  return (is_numeric($a) && is_numeric($b)) ? $a * $b : 0;
+}
 
-	if($test_mode==1){
-		echo'$sql_order='."$sql_order".'<br />';
-	}
-    $rs_order=mysql_query($sql_order);	
-	$num_order=mysql_num_rows($rs_order);	
-	//echo'num_order='."$num_order";
-	$J=0;
-	if($num_order>=1){
+// 有金額（不是空白也不是 0）
+function nz($v) {
+  return is_numeric($v) && $v != 0;
+}
 
-	$excel_array[$J][] ='訂單日期';
-	$excel_array[$J][] ='訂單時間'; 
-	$excel_array[$J][] ='編號'; 
-	$excel_array[$J][] ='付款方式'; 
-	$excel_array[$J][] ='書號'; 
-	$excel_array[$J][] ='產品名稱'; 
-	
-	$excel_array[$J][] ='出版社'; 
-	$excel_array[$J][] ='銷售價'; 
-	$excel_array[$J][] ='數量'; 
-	$excel_array[$J][] ='小計'; 
+// 商品、出版社查詢加上快取，同一個商品不會重複查詢（原本每一列都查兩次）
+function getProduct($num) {
+  global $pdo;
+  static $cache = array();
+  $num = (string)$num;
+  if (!isset($cache[$num])) {
+    $stmt = $pdo->prepare("SELECT * FROM `product` WHERE `product_num` = ?");
+    $stmt->execute(array($num));
+    $r = $stmt->fetch(PDO::FETCH_ASSOC);
+    $cache[$num] = $r ? $r : array();
+  }
+  return $cache[$num];
+}
+function getPublisherName($code) {
+  global $pdo;
+  static $cache = array();
+  $code = (string)$code;
+  if ($code === '') { return ''; }
+  if (!isset($cache[$code])) {
+    $stmt = $pdo->prepare("SELECT `name` FROM `publishing` WHERE `publishing_code` = ?");
+    $stmt->execute(array($code));
+    $n = $stmt->fetchColumn();
+    $cache[$code] = ($n === false) ? '' : $n;
+  }
+  return $cache[$code];
+}
 
-	$excel_array[$J][] ='收件人姓名'; 
-	$excel_array[$J][] ='收件人電話'; 
-	$excel_array[$J][] ='收件人地址'; 
-	$excel_array[$J][] ='配送方式'; 
-	$excel_array[$J][] ='發票'; 
-	$excel_array[$J][] ='抬頭';
-	$excel_array[$J][] ='統編'; 
-	$excel_array[$J][] ='訂單備註'; 
+/**
+ * 商品明細列（共 18 欄）
+ * $base = [訂單日期, 訂單時間, 編號, 付款方式]，$tail = [收件人…備註] 共 8 欄
+ */
+function itemRow($base, $tail, $label, $product_num, $name, $price, $qty, $subtotal) {
+  $p = getProduct($product_num);
+  return array_merge(
+    $base,
+    array(
+      isset($p['bar_code']) ? $p['bar_code'] : '',                                  // 書號
+      $label . $name,                                                               // 產品名稱
+      getPublisherName(isset($p['pd_publishing']) ? $p['pd_publishing'] : ''),      // 出版社
+      $price, $qty, $subtotal
+    ),
+    $tail
+  );
+}
 
-	$J++;
-		
-	while($row_order=mysql_fetch_array($rs_order,MYSQL_ASSOC)){
-	
-	
+/** 費用 / 折扣列：只有前幾欄與金額欄有值，其餘補空白（共 18 欄） */
+function sumRow($base, $code, $name, $price, $qty, $subtotal) {
+  $row = array_pad($base, 18, '');
+  $row[4] = $code;
+  $row[5] = $name;
+  $row[7] = $price;
+  $row[8] = $qty;
+  $row[9] = $subtotal;
+  return $row;
+}
 
+/* ------------------------------ 查詢條件 ------------------------------ */
 
-	
-	
-	
+$no         = isset($_REQUEST['no']) ? trim($_REQUEST['no']) : '';
+$start_time = isset($_REQUEST['start_time']) ? trim($_REQUEST['start_time']) : '';
+$end_time   = isset($_REQUEST['end_time']) ? trim($_REQUEST['end_time']) : '';
+$sh_state   = isset($_REQUEST['sh_state']) ? trim($_REQUEST['sh_state']) : '';
 
-	$order_all_list=json_decode($row_order['order_info'],true);	  
-	$order_num='C17'.sprintf("%06d",$row_order['no']);	
-	$order_addr= $row_order['invoice_zipcode'].' '.$row_order['invoice_city'].$row_order['invoice_area'].$row_order['invoice_addr'];	
-	if($row_order['pre_post_date']=='0000-00-00'){ $row_order['pre_post_date']=''; }
+$conds  = array();
+$params = array();
+if ($no !== '') {
+  $conds[]  = "`no` = ?";
+  $params[] = $no;
+} else {
+  if ($start_time !== '') { $conds[] = "`buytime` >= ?"; $params[] = $start_time; }
+  if ($end_time !== '')   { $conds[] = "`buytime` <= ?"; $params[] = $end_time; }
+  // 原本選「全部」(all) 會被當成訂單狀態去查，結果一筆都查不到
+  if ($sh_state !== '' && $sh_state !== 'all') { $conds[] = "`order_state` = ?"; $params[] = $sh_state; }
+}
+$sql = "SELECT * FROM `orderlist`" . ($conds ? " WHERE " . implode(" AND ", $conds) : "") . " ORDER BY `buytime` DESC";
 
-	$order_md = substr($row_order['buytime'],-14, 5);
-	$order_his = substr($row_order['buytime'],-8);
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-	//付款方式
-	$order_pay_mode= $pay_mode_array[$row_order['pay_mode']];
-	//配送方式
-	if($row_order['transportation_ps']!="" ){$transportation_ps='配送:'.$row_order['transportation_ps'];}else{$transportation_ps='';}
-	//發票
-	if($row_order['invoice_type'] == 2){
-		$receipt_type = '二聯';
-	}
-	if($row_order['invoice_type'] == 3){
-		$receipt_type = '三聯';
-	}
-	
-	$receipt_title = $row_order['invoice_title'];
-	$receipt_code = $row_order['invoice_num'];
-	//備註
-	if($row_order['ps']!="" ){$ps='備註:'.$row_order['ps'];}else{$ps='';} 
-	//跳行
-	if($row_order['transportation_ps']!=""&&$row_order['invoice_type']==3 ){$n1="\n";}else{$n1='';} 
-	if($row_order['transportation_ps']!=""&&$row_order['ps']!="" ){$n2="\n";}else{$n2='';}
-	
-	$order_book=0;	
+if (count($orders) < 1) {
+  header('Content-Type: text/html; charset=utf-8');
+  echo "沒有符合的資料";
+  exit;
+}
 
-	if($test_mode==1){
-	/* 	
-	print_r($row_order);	
-	echo'<br /><br />';
-	print_r($order_all_list);
-	 */
-	}
-	
+/* ------------------------------ 組出明細資料 ------------------------------ */
 
-	
-	for( $I=0; $I < (@sizeof($order_all_list['order_list'])); $I++ ){
-	$key_no=@key($order_all_list['order_list']);  
-	//echo '$key_no='.$key_no;
-	if($key_no!=''){
+$excel_array   = array();
+$excel_array[] = array('訂單日期', '訂單時間', '編號', '付款方式', '書號', '產品名稱', '出版社', '銷售價', '數量', '小計',
+                       '收件人姓名', '收件人電話', '收件人地址', '配送方式', '發票', '抬頭', '統編', '訂單備註');
 
-	$pd_name=@$order_all_list['order_list']["$key_no"]['pd_name'];
-	$pd_price=@$order_all_list['order_list']["$key_no"]['pd_price'];
-	$pd_buy_num=@$order_all_list['order_list']["$key_no"]['pd_buy_num'];
-	$product_num=@$order_all_list['order_list']["$key_no"]['product_num'];
-	$order_book= $order_book+$pd_buy_num;
-	
-	
-	$sql_product="SELECT * FROM `product` WHERE `product_num`='$product_num'";
-	$rs_product=@mysql_query($sql_product);
-	$row_product=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
-	
-	$sql_publishing="SELECT * FROM `publishing` WHERE `publishing_code`='".$row_product['pd_publishing']."'";
-	$rs_publishing=@mysql_query($sql_publishing);
-	$row_publishing=@mysql_fetch_array($rs_publishing,MYSQL_ASSOC);
-	
+foreach ($orders as $row_order) {
+  $list = json_decode($row_order['order_info'], true);
+  if (!is_array($list)) { $list = array(); }
 
-	$excel_array[$J][] = $order_md; //訂單日期
-	$excel_array[$J][] = $order_his; //訂單時間
-	$excel_array[$J][] = $order_num; //編號
-	$excel_array[$J][] = $order_pay_mode; //付款方式
-	$excel_array[$J][] = $row_product['bar_code']; //書號
-	$excel_array[$J][] = $pd_name; //產品名稱
-	
-	$excel_array[$J][] = $row_publishing['name']; //出版社
-	$excel_array[$J][] = $pd_price; //銷售價
-	$excel_array[$J][] = $pd_buy_num; //數量
-	$excel_array[$J][] = $pd_price*$pd_buy_num; //小計
-	
-	$excel_array[$J][] = $row_order['invoice_name']; //收件人姓名
-	$excel_array[$J][] = $row_order['invoice_tel']; //收件人電話
-	$excel_array[$J][] = $order_addr; //收件人地址
-	$excel_array[$J][] = $transportation_ps; //配送方式
-	$excel_array[$J][] = $receipt_type; //發票類型
-	$excel_array[$J][] = $receipt_title; //發票抬頭
-	$excel_array[$J][] = $receipt_code; //發票統編
-	$excel_array[$J][] = $ps; //訂單備註
+  $order_num  = 'C17' . sprintf("%06d", $row_order['no']);
+  $order_addr = $row_order['invoice_zipcode'] . ' ' . $row_order['invoice_city'] . $row_order['invoice_area'] . $row_order['invoice_addr'];
+  $order_md   = substr($row_order['buytime'], -14, 5);   // 月-日
+  $order_his  = substr($row_order['buytime'], -8);       // 時:分:秒
+  $order_pay  = isset($pay_mode_array[$row_order['pay_mode']]) ? $pay_mode_array[$row_order['pay_mode']] : $row_order['pay_mode'];
 
-	$J++;
-	}
-		if(@$order_all_list['addpd'][$key_no]!=''){
-        $addpd_array= $order_all_list['addpd'][$key_no];
-        for( $A=0; $A < @sizeof($addpd_array); $A++ ){
-					$key_no2=@key($addpd_array); 
+  $transportation_ps = ($row_order['transportation_ps'] != "") ? '配送:' . $row_order['transportation_ps'] : '';
+  // 原本的發票類型沒有預設值，沒填的訂單會沿用上一張訂單的值，這裡每張訂單都重設
+  $receipt_type = '';
+  if ($row_order['invoice_type'] == 2) { $receipt_type = '二聯'; }
+  if ($row_order['invoice_type'] == 3) { $receipt_type = '三聯'; }
+  $ps = ($row_order['ps'] != "") ? '備註:' . $row_order['ps'] : '';
 
-					$addpd_name= $addpd_array["$key_no2"]['addpd_name'];
-					$addpd_price= $addpd_array["$key_no2"]['addpd_price'];
-					$pd_buy_num= $addpd_array["$key_no2"]['pd_buy_num'];
-					$product_num= $addpd_array["$key_no2"]['product_num'];
+  $base = array($order_md, $order_his, $order_num, $order_pay);
+  $tail = array($row_order['invoice_name'], $row_order['invoice_tel'], $order_addr, $transportation_ps,
+                $receipt_type, $row_order['invoice_title'], $row_order['invoice_num'], $ps);
 
-					$order_book= $order_book+$pd_buy_num;
+  $order_book = 0;   // 本張訂單的總數量
 
-					$sql_product="SELECT * FROM `product` WHERE `product_num`='$product_num'";
-					$rs_product=@mysql_query($sql_product);
-					$row_product=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
+  // 一般商品 + 單品加價購
+  $order_list = g($list, 'order_list');
+  if (is_array($order_list)) {
+    foreach ($order_list as $key_no => $item) {
+      $pd_buy_num = g($item, 'pd_buy_num');
+      $pd_price   = g($item, 'pd_price');
+      $order_book += (float)$pd_buy_num;
+      $excel_array[] = itemRow($base, $tail, '', g($item, 'product_num'), g($item, 'pd_name'),
+                               $pd_price, $pd_buy_num, mul($pd_price, $pd_buy_num));
 
-					$sql_publishing="SELECT * FROM `publishing` WHERE `publishing_code`='".$row_product['pd_publishing']."'";
-					$rs_publishing=@mysql_query($sql_publishing);
-					$row_publishing=@mysql_fetch_array($rs_publishing,MYSQL_ASSOC);
-
-
-					$excel_array[$J][] = $order_md; //訂單日期
-					$excel_array[$J][] = $order_his; //訂單時間
-					$excel_array[$J][] = $order_num; //編號
-					$excel_array[$J][] = $order_pay_mode; //付款方式
-					$excel_array[$J][] = $row_product['bar_code']; //書號
-					$excel_array[$J][] ='(單品加價)'.$addpd_name; //產品名稱
-
-					$excel_array[$J][] = $row_publishing['name']; //出版社
-					$excel_array[$J][] = $addpd_price; //銷售價
-					$excel_array[$J][] = $pd_buy_num; //數量
-					$excel_array[$J][] = $addpd_price; //小計
-
-					$excel_array[$J][] = $row_order['invoice_name']; //收件人姓名
-					$excel_array[$J][] = $row_order['invoice_tel']; //收件人電話
-					$excel_array[$J][] = $order_addr; //收件人地址
-					$excel_array[$J][] = $transportation_ps; //配送方式
-					$excel_array[$J][] = $receipt_type; //發票類型
-					$excel_array[$J][] = $receipt_title; //發票抬頭
-					$excel_array[$J][] = $receipt_code; //發票統編
-					$excel_array[$J][] = $ps; //訂單備註
-
-
-					@next($addpd_array);
-					$J++;
-	
-		}
-		  	  
-
-	}
-	@next($order_all_list['order_list']);
-	} 
-	
-	
-	/*----------------------------   商品特賣   -------------------------------*/
-
-
-    for( $I=0; $I < (sizeof($order_all_list['sp_sell'])); $I++ ){
-    $key_no=@key($order_all_list['sp_sell']);  
-    if($key_no!=''){
-    //echo '$key_no='.$key_no;
-			$pd_name=@$order_all_list['sp_sell']["$key_no"]['pd_name'];
-			$pd_price=@$order_all_list['sp_sell']["$key_no"]['pd_price'];
-			$pd_buy_num=@$order_all_list['sp_sell']["$key_no"]['pd_buy_num'];
-			$product_num=@$order_all_list['sp_sell']["$key_no"]['product_num'];
-			$order_book= $order_book+$pd_buy_num;
-
-			$sql_product="SELECT * FROM `product` WHERE `product_num`='$product_num'";
-			$rs_product=@mysql_query($sql_product);
-			$row_product=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
-
-			$sql_publishing="SELECT * FROM `publishing` WHERE `publishing_code`='".$row_product['pd_publishing']."'";
-			$rs_publishing=@mysql_query($sql_publishing);
-			$row_publishing=@mysql_fetch_array($rs_publishing,MYSQL_ASSOC);
-
-
-			$excel_array[$J][] = $order_md; //訂單日期
-			$excel_array[$J][] = $order_his; //訂單時間
-			$excel_array[$J][] = $order_num; //編號
-			$excel_array[$J][] = $order_pay_mode; //付款方式
-			$excel_array[$J][] = $row_product['bar_code']; //書號
-			$excel_array[$J][] ='(特價活動)'.$pd_name; //產品名稱
-
-			$excel_array[$J][] = $row_publishing['name']; //出版社
-			$excel_array[$J][] = $pd_price; //銷售價
-			$excel_array[$J][] = $pd_buy_num; //數量
-			$excel_array[$J][] = $pd_price*$pd_buy_num; //小計
-
-			$excel_array[$J][] = $row_order['invoice_name']; //收件人姓名
-			$excel_array[$J][] = $row_order['invoice_tel']; //收件人電話
-			$excel_array[$J][] = $order_addr; //收件人地址
-			$excel_array[$J][] = $transportation_ps; //配送方式
-			$excel_array[$J][] = $receipt_type; //發票類型
-			$excel_array[$J][] = $receipt_title; //發票抬頭
-			$excel_array[$J][] = $receipt_code; //發票統編
-			$excel_array[$J][] = $ps; //訂單備註
-
-	$J++;
-	}
-	@next($order_all_list['sp_sell']);
+      $addpd_array = isset($list['addpd'][$key_no]) ? $list['addpd'][$key_no] : array();
+      if (is_array($addpd_array)) {
+        foreach ($addpd_array as $addpd) {
+          $a_num   = g($addpd, 'pd_buy_num');
+          $a_price = g($addpd, 'addpd_price');
+          $order_book += (float)$a_num;
+          // 小計維持原本的算法：直接等於加價購單價
+          $excel_array[] = itemRow($base, $tail, '(單品加價)', g($addpd, 'product_num'), g($addpd, 'addpd_name'),
+                                   $a_price, $a_num, $a_price);
+        }
+      }
     }
+  }
 
-	
-	/*--------------------------- 商品特賣 END --------------------------------*/
-	
-	
-	
-	/*----------------------------   幾本幾折   -------------------------------*/
-	 
-    if($order_all_list['act_sell_info']!=''){ 
-
-	for( $I=0; $I <(@sizeof($order_all_list['act_sell_info'])); $I++ ){
-	$act_sell_code=@key($order_all_list['act_sell_info']); 
-
-
-		if($act_sell_code!=''){
-			for( $K=0; $K < @sizeof($order_all_list['num_sell'][$act_sell_code]); $K++ ){ 
-			$product_code=@key($order_all_list['num_sell'][$act_sell_code]);
-				if($product_code!=''){
-				$pd_name=@$order_all_list['num_sell']["$act_sell_code"]["$product_code"]['pd_name']; 
-							
-	 $num_discount=@$order_all_list['act_sell_info'][$act_sell_code]['num_discount'];
-		 
-		 $book_num=@$order_all_list['act_sell_info'][$act_sell_code]['book_num'];
-		 			
-	if ($book_num<$num_discount[0])
-		{$pd_price=@$order_all_list['num_sell']["$act_sell_code"]["$product_code"]['mem_price'];}else 
-		{$pd_price=@$order_all_list['num_sell']["$act_sell_code"]["$product_code"]['pd_price'];}			
-
-
-		$pd_buy_num=@$order_all_list['num_sell']["$act_sell_code"]["$product_code"]['pd_buy_num']; 
-		$product_num=@$order_all_list['num_sell']["$act_sell_code"]["$product_code"]['product_num']; ;
-		$order_book= $order_book+$pd_buy_num;
-
-		$sql_product="SELECT * FROM `product` WHERE `product_num`='$product_num'";
-		$rs_product=@mysql_query($sql_product);
-		$row_product=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
-
-		$sql_publishing="SELECT * FROM `publishing` WHERE `publishing_code`='".$row_product['pd_publishing']."'";
-		$rs_publishing=@mysql_query($sql_publishing);
-		$row_publishing=@mysql_fetch_array($rs_publishing,MYSQL_ASSOC);
-
-		$excel_array[$J][] = $order_md; //訂單日期
-		$excel_array[$J][] = $order_his; //訂單時間
-		$excel_array[$J][] = $order_num; //編號
-		$excel_array[$J][] = $order_pay_mode; //付款方式
-		$excel_array[$J][] = $row_product['bar_code']; //書號
-		$excel_array[$J][] ='(幾本幾折)'.$pd_name; //產品名稱
-
-		$excel_array[$J][] = $row_publishing['name']; //出版社
-		$excel_array[$J][] = $pd_price; //銷售價
-		$excel_array[$J][] = $pd_buy_num; //數量
-		$excel_array[$J][] = $pd_price*$pd_buy_num; //小計
-
-		$excel_array[$J][] = $row_order['invoice_name']; //收件人姓名
-		$excel_array[$J][] = $row_order['invoice_tel']; //收件人電話
-		$excel_array[$J][] = $order_addr; //收件人地址
-		$excel_array[$J][] = $transportation_ps; //配送方式
-		$excel_array[$J][] = $receipt_type; //發票類型
-		$excel_array[$J][] = $receipt_title; //發票抬頭
-		$excel_array[$J][] = $receipt_code; //發票統編
-		$excel_array[$J][] = $ps; //訂單備註
-
-		$J++;
-		}
-		@next($order_all_list['num_sell'][$act_sell_code]);
-		}
-		}
-
-		$excel_array[$J][0] = $order_md; //訂單日期
-		$excel_array[$J][1] = $order_his; //訂單時間
-		$excel_array[$J][2] = $order_num; //編號
-		$excel_array[$J][3] = $order_pay_mode; //付款方式
-		$excel_array[$J][4] = '9020000003000'; //編號
-		$excel_array[$J][5] = '幾本幾折折扣-'.@$order_all_list['act_sell_info'][$act_sell_code]['act_sell_name']; ;  
-		$excel_array[$J][7] = '-'.@$order_all_list['act_sell_info'][$act_sell_code]['discount_money'];  	
-		$excel_array[$J][8] = 1;  
-		$excel_array[$J][9] = '-'.@$order_all_list['act_sell_info'][$act_sell_code]['discount_money'];  
-		$J++;
-		@next($order_all_list['act_sell_info']);
+  // 商品特賣
+  $sp_sell = g($list, 'sp_sell');
+  if (is_array($sp_sell)) {
+    foreach ($sp_sell as $item) {
+      $pd_buy_num = g($item, 'pd_buy_num');
+      $pd_price   = g($item, 'pd_price');
+      $order_book += (float)$pd_buy_num;
+      $excel_array[] = itemRow($base, $tail, '(特價活動)', g($item, 'product_num'), g($item, 'pd_name'),
+                               $pd_price, $pd_buy_num, mul($pd_price, $pd_buy_num));
     }
-	}
+  }
 
+  // 幾本幾折
+  $act_sell_info = g($list, 'act_sell_info');
+  if (is_array($act_sell_info)) {
+    foreach ($act_sell_info as $act_code => $info) {
+      $num_sell     = (isset($list['num_sell'][$act_code]) && is_array($list['num_sell'][$act_code])) ? $list['num_sell'][$act_code] : array();
+      $num_discount = g($info, 'num_discount');
+      $first        = (is_array($num_discount) && isset($num_discount[0])) ? $num_discount[0] : 0;
+      $book_num     = g($info, 'book_num');
 
-	/*--------------------------- 幾本幾折 END --------------------------------*/
-
-
-	
-	/*----------------------------    滿額贈品    -------------------------------*/
-	
-	
-	if($order_all_list['order_addpd']!=''){
-		$sql_product="SELECT * FROM `product` WHERE `product_num` IN ('".join("','",explode(",",$order_all_list['order_addpd']))."') AND `ishow`='1'";
-		//echo"$sql_product";
-		$rs_product=mysql_query($sql_product);
-		$num_product=mysql_num_rows($rs_product);
-		$order_book= $order_book+$num_product;
-		while($row_product=mysql_fetch_array($rs_product,MYSQL_ASSOC)){  
-		
-			$pd_name=@$row_product['name']; 
-			$pd_price=0; 
-			$pd_buy_num=1; 
-			$product_num= $row_product['product_num']; ;
-					
-			$sql_product2="SELECT * FROM `product` WHERE `product_num`='$product_num'";
-			$rs_product2=@mysql_query($sql_product2);
-			$row_product2=@mysql_fetch_array($rs_product2,MYSQL_ASSOC);
-
-			$sql_publishing="SELECT * FROM `publishing` WHERE `publishing_code`='".$row_product['pd_publishing']."'";
-			$rs_publishing=@mysql_query($sql_publishing);
-			$row_publishing=@mysql_fetch_array($rs_publishing,MYSQL_ASSOC);
-
-					
-					
-			$excel_array[$J][] = $order_md; //訂單日期
-			$excel_array[$J][] = $order_his; //訂單時間
-			$excel_array[$J][] = $order_num; //編號
-			$excel_array[$J][] = $order_pay_mode; //付款方式
-			$excel_array[$J][] = $row_product['bar_code']; //書號
-			$excel_array[$J][] ='(滿額贈品)'.$pd_name; //產品名稱
-
-			$excel_array[$J][] = $row_publishing['name']; //出版社
-			$excel_array[$J][] = $pd_price; //銷售價
-			$excel_array[$J][] = $pd_buy_num; //數量
-			$excel_array[$J][] = $pd_price*$pd_buy_num; //小計
-
-			$excel_array[$J][] = $row_order['invoice_name']; //收件人姓名
-			$excel_array[$J][] = $row_order['invoice_tel']; //收件人電話
-			$excel_array[$J][] = $order_addr; //收件人地址
-			$excel_array[$J][] = $transportation_ps; //配送方式
-			$excel_array[$J][] = $receipt_type; //發票類型
-			$excel_array[$J][] = $receipt_title; //發票抬頭
-			$excel_array[$J][] = $receipt_code; //發票統編
-			$excel_array[$J][] = $ps; //訂單備註
-			$J++;
-		
-		}
-	}
-	
-	/*---------------------------  滿額贈品 END  --------------------------------*/
-	
-	
-	/*----------------------------    滿額加價購    -------------------------------*/
-	
-	
-	if($order_all_list['m_addpd']!=''){
-		
-		for( $I=0; $I < @sizeof($order_all_list['m_addpd']); $I++ ){ 
-		$key=@key($order_all_list['m_addpd']);
-		
-		$pd_name=@$order_all_list['m_addpd']["$key"]['name']; 
-		$pd_price=@$order_all_list['m_addpd']["$key"]['price']; 
-		$pd_buy_num=@$order_all_list['m_addpd']["$key"]['pd_buy_num'];
-		$product_num=@$order_all_list['m_addpd']["$key"]['product_num'];
-		$order_book= $order_book+$pd_buy_num;
-
-		$sql_product="SELECT * FROM `product` WHERE `product_num`='$product_num'";
-		$rs_product=@mysql_query($sql_product);
-		$row_product=@mysql_fetch_array($rs_product,MYSQL_ASSOC);
-
-		$sql_publishing="SELECT * FROM `publishing` WHERE `publishing_code`='".$row_product['pd_publishing']."'";
-		$rs_publishing=@mysql_query($sql_publishing);
-		$row_publishing=@mysql_fetch_array($rs_publishing,MYSQL_ASSOC);
-
-
-		$excel_array[$J][] = $order_md; //訂單日期
-		$excel_array[$J][] = $order_his; //訂單時間
-		$excel_array[$J][] = $order_num; //編號
-		$excel_array[$J][] = $order_pay_mode; //付款方式
-		$excel_array[$J][] = $row_product['bar_code']; //書號
-		$excel_array[$J][] ='(滿額加購)'.$pd_name; //產品名稱
-
-		$excel_array[$J][] = $row_publishing['name']; //出版社
-		$excel_array[$J][] = $pd_price; //銷售價
-		$excel_array[$J][] = $pd_buy_num; //數量
-		$excel_array[$J][] = $pd_price*$pd_buy_num; //小計
-
-		$excel_array[$J][] = $row_order['invoice_name']; //收件人姓名
-		$excel_array[$J][] = $row_order['invoice_tel']; //收件人電話
-		$excel_array[$J][] = $order_addr; //收件人地址
-		$excel_array[$J][] = $transportation_ps; //配送方式
-		$excel_array[$J][] = $receipt_type; //發票類型
-		$excel_array[$J][] = $receipt_title; //發票抬頭
-		$excel_array[$J][] = $receipt_code; //發票統編
-		$excel_array[$J][] = $ps; //訂單備註
-		$J++;
-		@next($order_all_list['m_addpd']);
-		}
-		
-	}
-	
-	/*---------------------------  滿額贈品 END  --------------------------------*/
-	
-	
-	
-
-    
-    
-	/*     
-	if($order_all_list['act_sell_info']!=''){ 
-		@reset($order_all_list['act_sell_info']);
-		for( $I=0; $I <(@sizeof($order_all_list['act_sell_info'])); $I++ ){
-		$act_sell_code=@key($order_all_list['act_sell_info']);  
-		$excel_array[$J][7] ='幾本幾折折扣-'.@$order_all_list['act_sell_info'][$act_sell_code]['act_sell_name']; ;  
-		$excel_array[$J][8] ='-'.@$order_all_list['act_sell_info'][$act_sell_code]['discount_money'];  
-		$J++;
-		@next($order_all_list['act_sell_info']);
-		}
-    }	 
-	*/
-	
-	
-
-	
-	if($row_order['pay_mode_price']!='' && $row_order['pay_mode_price']!=0){
-	$excel_array[$J][0] = $order_md; //訂單日期
-	$excel_array[$J][1] = $order_his; //訂單時間
-	$excel_array[$J][2] = $order_num; //編號
-	$excel_array[$J][3] = $order_pay_mode; //付款方式
-	$excel_array[$J][4] = '9020000001006'; //編號
-	$excel_array[$J][5] ='超商付款手續費'; 
-	$excel_array[$J][7] = $row_order['pay_mode_price']; 	 	
-	$excel_array[$J][8] = 1; 
-	$excel_array[$J][9] = $row_order['pay_mode_price']; 	
-	$J++;
-	}
-
-	if($row_order['transportation']!='' && $row_order['transportation']!=0){
-	$excel_array[$J][0] = $order_md; //訂單日期
-	$excel_array[$J][1] = $order_his; //訂單時間
-	$excel_array[$J][2] = $order_num; //編號
-	$excel_array[$J][3] = $order_pay_mode; //付款方式
-	$excel_array[$J][4] = '9020000001006'; //編號
-	$excel_array[$J][5] ='運費';  
-	$excel_array[$J][7] = $row_order['transportation']; 		
-	$excel_array[$J][8] = 1; 
-	$excel_array[$J][9] = $row_order['transportation']; 	
-	$J++;
-	}
-
-	if($row_order['other_price']!='' && $row_order['other_price']!=0){
-	$excel_array[$J][0] = $order_md; //訂單日期
-	$excel_array[$J][1] = $order_his; //訂單時間
-	$excel_array[$J][2] = $order_num; //編號
-	$excel_array[$J][6] = $order_pay_mode; //付款方式
-	$excel_array[$J][5] ='其他費用-'.@$row_order['other_ps'];
-	$excel_array[$J][7] = $row_order['other_price']; 	
-	$excel_array[$J][8] = 1; 	
-	$excel_array[$J][9] = $row_order['other_price'];  
-	$J++;
-	}
-
-	
-
-	if($order_all_list['promo']['promo_total']!='' && $order_all_list['promo']['promo_total']!=0){
-	$excel_array[$J][0] = $order_md; //訂單日期
-	$excel_array[$J][1] = $order_his; //訂單時間
-	$excel_array[$J][2] = $order_num; //編號
-	$excel_array[$J][3] = $order_pay_mode; //付款方式
-	$excel_array[$J][4] = '9020000003000'; //編號
-	$excel_array[$J][5] ='活動-滿額折抵';  
-	$excel_array[$J][7] = '-'.$order_all_list['promo']['promo_total'];  
-	$excel_array[$J][8] = 1; 
-	$excel_array[$J][9] = '-'.$order_all_list['promo']['promo_total'];  
-	$J++;
-	}
-
-	if($order_all_list['gift_card']['gift_price']!='' && $order_all_list['gift_card']['gift_price']!=0){  
-	$excel_array[$J][0] = $order_md; //訂單日期
-	$excel_array[$J][1] = $order_his; //訂單時間
-	$excel_array[$J][2] = $order_num; //編號
-	$excel_array[$J][3] = $order_pay_mode; //付款方式
-	$excel_array[$J][4] = '9020000003000'; //編號
-	$excel_array[$J][5] ='折價券折抵-'.@$order_all_list['gift_card']['name'];  
-	$excel_array[$J][7] = '-'.$order_all_list['gift_card']['gift_price'];  
-	$excel_array[$J][8] = 1;  
-	$excel_array[$J][9] = '-'.$order_all_list['gift_card']['gift_price'];  
-	$J++;
-	}
-    
-	if($row_order['total_amount']!='' && $row_order['total_amount']!=0){
-	//$excel_array[$J][6] ='小計：';  
-	$excel_array[$J][8] = $order_book;  
-	$excel_array[$J][9] = $row_order['total_amount'];  
-	$J++;	
-	}
-	/* 
-	$J++;	
-	$J++;
-	 */
-	} //while END
-	
-	$total= $J;
-	//print_r($excel_array);
-	
-	if($test_mode==1){
-		
-		print_r($excel_array);
-		echo'共有幾列='.sizeof($excel_array).'<br />';
-	}
-
-	// Create new PHPExcel object
-	$objPHPExcel = new PHPExcel();
-	// 設置屬性
-	$objPHPExcel->getProperties()->setCreator("測試作者")//作者
-	->setLastModifiedBy("測試修改者")//最後修改者
-	->setTitle("測試標題")//標題
-	->setSubject("測試主旨")//主旨
-	->setDescription("測試註解")//註解
-	->setKeywords("測試標記")//標記
-	->setCategory("測試類別"); //類別
-	//Create a first sheet
-	$objPHPExcel->setActiveSheetIndex(0);
-	
-	$col_name_array=array(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,AB,AC,AD,AE,AF,AG,AH,AI,AJ,AK,AL,AM,AN,AO,AP,AQ,AL,AM,AN);
-	//echo'<br /><br />';
-
-	//print_r($col_name_array);
-	$col_all_num=sizeof($excel_array['0']);
-	
-	
-	//設定欄位寬度
-	$col_width=11;
-	for( $I=0; $I < $col_all_num; $I++ ){
-	$objPHPExcel->getActiveSheet()->getColumnDimension($col_name_array[$I])->setWidth($col_width);
-	}
-	
-	//echo'$col_all_num='.$col_all_num;
-	//產生列
-	
-	//for( $J=1; $J <= sizeof($excel_array); $J++ ){
-	for( $J=1; $J <= $total; $J++ ){
-		for( $K=0; $K < $col_all_num; $K++ ){
-		$type = PHPExcel_Cell_DataType::TYPE_STRING;
-        //$objPHPExcel->getCellByColumnAndRow($col_name_array[$K], $J)->setValueExplicit($excel_array[$J][$K], $type);
-		$type = PHPExcel_Cell_DataType::TYPE_STRING;
-		$objPHPExcel->getActiveSheet()->getCell($col_name_array[$K]."$J")->setValueExplicit($excel_array[($J-1)][$K], $type);
-		//$objPHPExcel->getActiveSheet()->setCellValue($col_name_array[$K]."$J", $excel_array[$J][$K]);
-		}
-	} 
-
-	if($test_mode==0){ 
-		//Excel檔名
-		$filename = "order_".$no.".xls";
-	
-		//產生header
-		header("Content-type: application/vnd.ms-excel");
-		header("Content-Disposition: attachment; filename= $filename" );
-		header("Expires: 0");
-		header("Cache-Control: must-revalidate, post-check=0,pre-check=0");
-		header("Pragma: public"); 
-	 
-		//Save Excel 5 file 保存
-		require_once('../../class/PHPExcel/Writer/Excel5.php');
-		$objWriter = new PHPExcel_Writer_Excel5($objPHPExcel);
-		$objWriter->save($filename);
-		
-		//產生Excel下載檔
-		$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5'); //20003格式
-		
-		$objWriter->save('php://output');
-
-	}
-	
-	}else{
-		echo"沒有符合的資料";	
+      foreach ($num_sell as $item) {
+        $pd_price   = ($book_num < $first) ? g($item, 'mem_price') : g($item, 'pd_price');
+        $pd_buy_num = g($item, 'pd_buy_num');
+        $order_book += (float)$pd_buy_num;
+        $excel_array[] = itemRow($base, $tail, '(幾本幾折)', g($item, 'product_num'), g($item, 'pd_name'),
+                                 $pd_price, $pd_buy_num, mul($pd_price, $pd_buy_num));
+      }
+      $discount = g($info, 'discount_money');
+      $excel_array[] = sumRow($base, '9020000003000', '幾本幾折折扣-' . g($info, 'act_sell_name'), '-' . $discount, 1, '-' . $discount);
     }
-	
-		
+  }
 
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>無標題文件</title>
-</head>
+  // 滿額贈品
+  $order_addpd = g($list, 'order_addpd');
+  if ($order_addpd != '') {
+    $nums = array_values(array_filter(array_map('trim', explode(",", $order_addpd)), 'strlen'));
+    if ($nums) {
+      $in   = implode(',', array_fill(0, count($nums), '?'));
+      $stmt = $pdo->prepare("SELECT * FROM `product` WHERE `product_num` IN ({$in}) AND `ishow` = '1'");
+      $stmt->execute($nums);
+      $gifts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      $order_book += count($gifts);
+      foreach ($gifts as $gift) {
+        $excel_array[] = itemRow($base, $tail, '(滿額贈品)', $gift['product_num'], $gift['name'], 0, 1, 0);
+      }
+    }
+  }
 
-<body>
-</body>
-</html>
+  // 滿額加價購
+  $m_addpd = g($list, 'm_addpd');
+  if (is_array($m_addpd)) {
+    foreach ($m_addpd as $item) {
+      $pd_price   = g($item, 'price');
+      $pd_buy_num = g($item, 'pd_buy_num');
+      $order_book += (float)$pd_buy_num;
+      $excel_array[] = itemRow($base, $tail, '(滿額加購)', g($item, 'product_num'), g($item, 'name'),
+                               $pd_price, $pd_buy_num, mul($pd_price, $pd_buy_num));
+    }
+  }
+
+  // 各項費用與折抵
+  if (nz($row_order['pay_mode_price'])) {
+    $excel_array[] = sumRow($base, '9020000001006', '超商付款手續費', $row_order['pay_mode_price'], 1, $row_order['pay_mode_price']);
+  }
+  if (nz($row_order['transportation'])) {
+    $excel_array[] = sumRow($base, '9020000001006', '運費', $row_order['transportation'], 1, $row_order['transportation']);
+  }
+  if (nz($row_order['other_price'])) {
+    // 原本付款方式誤放在第 7 欄（出版社），這裡改放在第 4 欄與其他列一致
+    $excel_array[] = sumRow($base, '', '其他費用-' . $row_order['other_ps'], $row_order['other_price'], 1, $row_order['other_price']);
+  }
+  $promo_total = isset($list['promo']['promo_total']) ? $list['promo']['promo_total'] : '';
+  if (nz($promo_total)) {
+    $excel_array[] = sumRow($base, '9020000003000', '活動-滿額折抵', '-' . $promo_total, 1, '-' . $promo_total);
+  }
+  $gift_price = isset($list['gift_card']['gift_price']) ? $list['gift_card']['gift_price'] : '';
+  if (nz($gift_price)) {
+    $gift_name = isset($list['gift_card']['name']) ? $list['gift_card']['name'] : '';
+    $excel_array[] = sumRow($base, '9020000003000', '折價券折抵-' . $gift_name, '-' . $gift_price, 1, '-' . $gift_price);
+  }
+
+  // 訂單合計
+  if (nz($row_order['total_amount'])) {
+    $total_row    = array_fill(0, 18, '');
+    $total_row[8] = $order_book;
+    $total_row[9] = $row_order['total_amount'];
+    $excel_array[] = $total_row;
+  }
+}
+
+/* ------------------------------ 輸出 Excel ------------------------------ */
+
+$objPHPExcel = new PHPExcel();
+$objPHPExcel->getProperties()->setCreator("CART 後台")
+  ->setLastModifiedBy("CART 後台")
+  ->setTitle("訂單明細")
+  ->setSubject("訂單明細")
+  ->setDescription("訂單明細匯出")
+  ->setKeywords("orderlist")
+  ->setCategory("orderlist");
+$objPHPExcel->setActiveSheetIndex(0);
+$sheet = $objPHPExcel->getActiveSheet();
+
+$col_all_num = count($excel_array[0]);
+for ($c = 0; $c < $col_all_num; $c++) {
+  $sheet->getColumnDimension(PHPExcel_Cell::stringFromColumnIndex($c))->setWidth(11);
+}
+
+// 一律以字串寫入（欄位代號改用函式產生，原本的陣列少了引號、最後還重複了 AL/AM/AN）
+foreach ($excel_array as $r => $line) {
+  foreach ($line as $c => $value) {
+    $cell = PHPExcel_Cell::stringFromColumnIndex($c) . ($r + 1);
+    $sheet->setCellValueExplicit($cell, (string)$value, PHPExcel_Cell_DataType::TYPE_STRING);
+  }
+}
+
+// 清掉前面可能的輸出，避免檔案損毀
+while (ob_get_level() > 0) {
+  ob_end_clean();
+}
+
+// 原本還會先把檔案存到伺服器上（$objWriter->save($filename)），而且檔尾多了一段空白 HTML 會被附加進 xls，都已移除
+$suffix   = ($no !== '') ? preg_replace('/[^0-9A-Za-z_-]/', '', $no) : date("Ymd_His");
+$filename = "order_" . $suffix . ".xls";
+header("Content-Type: application/vnd.ms-excel");
+header("Content-Disposition: attachment; filename=\"{$filename}\"");
+header("Expires: 0");
+header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+header("Pragma: public");
+
+$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+$objWriter->save('php://output');
+exit;

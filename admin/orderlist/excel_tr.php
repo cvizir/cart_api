@@ -1,180 +1,140 @@
 <?php
+ini_set("memory_limit", "256M");
+set_time_limit(900);
 
-	ini_set("memory_limit","100M");
-	set_time_limit(900);
+require_once("../../include/config.inc.php");
+include_once("../session.php");     // 原本沒有載入，任何人只要知道網址就能下載全部訂單（含姓名、電話、地址）
+require_once("../../include/function.php");
+require_once('../../class/PHPExcel.php');
+require_once('../../class/PHPExcel/IOFactory.php');
 
+// 付款方式對照表：原本由舊的 config.php 提供，新的 config.inc.php 沒有，這裡補上預設值
+if (!isset($pay_mode_array)) {
+  $pay_mode_array = array('card' => '信用卡', 'atm' => 'ATM轉帳', 'store_pay' => '超商付款',
+                          'line_pay' => 'Line Pay付款', 'post' => '郵政劃撥', 'foreign' => '國外訂購');
+}
 
-	
- 	require_once("../../config.php");
-	require_once("../../include/function.php");
-	require_once('../../class/PHPExcel.php');
-	require_once('../../class/PHPExcel/Writer/Excel5.php');
-	require_once('../../class/PHPExcel/IOFactory.php');
-	
-	
-	$start_time = $_REQUEST["start_time"];
-	$end_time = $_REQUEST["end_time"];
-	$sh_state = $_REQUEST["sh_state"];
-	$trace=0;
-	//print_r($_REQUEST);
-	if($start_time!="" && $end_time!="" && $sh_state!=""){
-		
-   
-    if($sh_state=='all'){ 
-    	$sql_orderlist="SELECT * FROM `orderlist` WHERE `uptime`>='$start_time' AND `buytime`<='$end_time' ORDER BY buytime ASC ";
-	}else{
-		$sql_orderlist="SELECT * FROM `orderlist` WHERE `uptime`>='$start_time' AND `buytime`<='$end_time' AND `order_state`='$sh_state' ORDER BY buytime ASC ";	
-	}
+$start_time = isset($_REQUEST['start_time']) ? trim($_REQUEST['start_time']) : '';
+$end_time   = isset($_REQUEST['end_time']) ? trim($_REQUEST['end_time']) : '';
+$sh_state   = isset($_REQUEST['sh_state']) ? trim($_REQUEST['sh_state']) : '';
 
-	
-    $rs_orderlist=mysql_query($sql_orderlist);	
-	$num_orderlist=mysql_num_rows($rs_orderlist);	
-	
-    if($trace==1){
-	echo"1";	
-	echo"$sql_orderlist";
-	echo'num_orderlist='."$num_orderlist";
-	}
-	
-	if($num_orderlist>=1){
-		
-	$excel_array[0]['0'] ='訂單狀態'; 
-	$excel_array[0]['1'] ='金額'; 
-	$excel_array[0]['2'] ='訂購人';
-	$excel_array[0]['3'] ='訂單編碼';
-	$excel_array[0]['4'] ='確認日期'; 
-	$excel_array[0]['5'] ='訂單日期';
-	$excel_array[0]['6'] ='訂單號碼'; 
-	$excel_array[0]['7'] ='付款方式';
-	$excel_array[0]['8'] ='收件人';
-	$excel_array[0]['9'] ='電話'; 
-	$excel_array[0]['10'] ='送件地址';
-	$excel_array[0]['11'] ='配送方式/發票/訂單備註';
+if ($start_time === '' || $end_time === '' || $sh_state === '') {
+  header('Content-Type: text/html; charset=utf-8');
+  echo "請選擇訂單狀態與日期區間";
+  exit;
+}
 
-	$J=1;
-    while($row_orderlist=mysql_fetch_array($rs_orderlist,MYSQL_ASSOC)){	
-	
-	$sql_member="SELECT * FROM `member` WHERE `no`='$row_orderlist[member_no]'";
-	$rs_member=mysql_query($sql_member);
-	$row_member=mysql_fetch_array($rs_member,MYSQL_ASSOC);
-	
-	
-	 //echo '$pd_name='.$pd_name;
-	  $excel_array[$J]['0'] =$row_orderlist['order_state']; 
-	  $excel_array[$J]['1'] =$row_orderlist['total_amount']; 
-	  $excel_array[$J]['2'] =substr($row_member['mem_lv'],-1).'-W'.$row_orderlist['member_no'];
-	  $excel_array[$J]['3']=$row_orderlist['order_code'];
-	  $excel_array[$J]['4'] =$row_orderlist['uptime'];
-	  $excel_array[$J]['5'] =$row_orderlist['buytime'];
-  	  $excel_array[$J]['6'] = 'C17'.sprintf("%06d",$row_orderlist['no']); 
-      $excel_array[$J]['7'] =$pay_mode_array[$row_orderlist['pay_mode']];
-      $excel_array[$J]['8'] =$row_orderlist['invoice_name'];
-	  if($row_orderlist['invoice_mphone']!="" && $row_orderlist['invoice_tel']!=""){
-			  if($row_orderlist['invoice_mphone']!=$row_orderlist['invoice_tel']){
-				  $invoice_mphone=$row_orderlist['invoice_mphone'].'&&'.$row_orderlist['invoice_tel'];
-			  }else{
-				  $invoice_mphone=$row_orderlist['invoice_mphone'];
-			  }
-		  }else{
-			  $invoice_mphone=$row_orderlist['invoice_mphone'].$row_orderlist['invoice_tel'];
-	  }
+/*
+ * 日期區間條件。原本是 uptime >= 開始 AND buytime <= 結束（開始用「最後修改時間」、結束用「訂單時間」），
+ * 兩端用的不是同一個欄位，結果會漏單或多出單；這裡統一用訂單時間 buytime。
+ */
+$sql    = "SELECT * FROM `orderlist` WHERE `buytime` >= ? AND `buytime` <= ?";
+$params = array($start_time, $end_time);
+if ($sh_state !== 'all') {
+  $sql     .= " AND `order_state` = ?";
+  $params[] = $sh_state;
+}
+$sql .= " ORDER BY `buytime` ASC";
 
-	  $excel_array[$J]['9']=$invoice_mphone;
-	  $excel_array[$J]['10'] =$row_orderlist['invoice_zipcode'].$row_orderlist['invoice_city'].$row_orderlist['invoice_area'].$row_orderlist['invoice_addr']; 
-	 
-	 if($row_orderlist['transportation_ps']!="" ){$transportation_ps='配送:'.$row_orderlist['transportation_ps'];}else{$transportation_ps='';} 
-	 if($row_orderlist['transportation_ps']!=""&&$row_orderlist['invoice_type']==3 ){$n1="\n";}else{$n1='';} 
-	 if($row_orderlist['invoice_type']==3 ){$invoice_type='統編：'.$row_orderlist['invoice_num']."\n".'公司：'.$row_orderlist['invoice_title'];}else{$invoice_type='';}
-	 if($row_orderlist['transportation_ps']!=""&&$row_orderlist['ps']!="" ){$n2="\n";}else{$n2='';} 
-	 if($row_orderlist['ps']!="" ){$ps='備註:'.$row_orderlist['ps'];}else{$ps='';} 
-	  
-	  $excel_array[$J]['11']=$transportation_ps.$n1.$invoice_type.$n2.$ps;
-	
-		  
-	  $J++;
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-	} 
-	
+if (count($orders) < 1) {
+  header('Content-Type: text/html; charset=utf-8');
+  echo "沒有符合的資料";
+  exit;
+}
 
+// 一次查出所有相關會員（原本每一筆訂單查一次）
+$members = array();
+$ids = array();
+foreach ($orders as $o) {
+  if ($o['member_no'] !== '' && $o['member_no'] !== null) { $ids[$o['member_no']] = true; }
+}
+if ($ids) {
+  $idl  = array_keys($ids);
+  $in   = implode(',', array_fill(0, count($idl), '?'));
+  $stmt = $pdo->prepare("SELECT `no`, `mem_lv` FROM `member` WHERE `no` IN ({$in})");
+  $stmt->execute($idl);
+  foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $m) { $members[$m['no']] = $m; }
+}
 
-	
-	//print_r($excel_array);
-	
+$excel_array   = array();
+$excel_array[] = array('訂單狀態', '金額', '訂購人', '訂單編碼', '確認日期', '訂單日期',
+                       '訂單號碼', '付款方式', '收件人', '電話', '送件地址', '配送方式/發票/訂單備註');
 
+foreach ($orders as $row) {
+  $mem_lv = isset($members[$row['member_no']]['mem_lv']) ? $members[$row['member_no']]['mem_lv'] : '';
 
-	// Create new PHPExcel object
-	$objPHPExcel = new PHPExcel();
-	// 設置屬性
-	$objPHPExcel->getProperties()->setCreator("測試作者")//作者
-	->setLastModifiedBy("測試修改者")//最後修改者
-	->setTitle("測試標題")//標題
-	->setSubject("測試主旨")//主旨
-	->setDescription("測試註解")//註解
-	->setKeywords("測試標記")//標記
-	->setCategory("測試類別");//類別
-	//Create a first sheet
-	$objPHPExcel->setActiveSheetIndex(0);
-	
-	$col_name_array=array(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,AB,AC,AD,AE,AF,AG,AH,AI,AJ,AK,AL,AM,AN,AO,AP,AQ,AL,AM,AN);
-	//echo'<br /><br />';
+  // 電話：手機與電話都有且不同時，用 && 連起來
+  $mphone = isset($row['invoice_mphone']) ? $row['invoice_mphone'] : '';
+  $tel    = $row['invoice_tel'];
+  if ($mphone != "" && $tel != "") {
+    $phone = ($mphone != $tel) ? $mphone . '&&' . $tel : $mphone;
+  } else {
+    $phone = $mphone . $tel;
+  }
 
-	//print_r($col_name_array);
-	$col_all_num=sizeof($excel_array['0']);
-	
-	
-	//設定欄位寬度
-	$col_width=10;
-	for( $I=0; $I < $col_all_num; $I++ ){
-	$objPHPExcel->getActiveSheet()->getColumnDimension($col_name_array[$I])->setWidth($col_width);
-	}
-	
-	//echo'$col_all_num='.$col_all_num;
-	//產生列
-	for( $J=1; $J <= sizeof($excel_array); $J++ ){
-		for( $K=0; $K < $col_all_num; $K++ ){
-		$type = PHPExcel_Cell_DataType::TYPE_STRING;
-        //$objPHPExcel->getCellByColumnAndRow($col_name_array[$K], $J)->setValueExplicit($excel_array[$J][$K], $type);
-		$type = PHPExcel_Cell_DataType::TYPE_STRING;
-		$objPHPExcel->getActiveSheet()->getCell($col_name_array[$K]."$J")->setValueExplicit($excel_array[($J-1)][$K], $type);
-		//$objPHPExcel->getActiveSheet()->setCellValue($col_name_array[$K]."$J", $excel_array[$J][$K]);
-		}
-	} 
+  // 配送方式 / 發票 / 備註（有內容才換行串接）
+  $parts = array();
+  if ($row['transportation_ps'] != "") { $parts[] = '配送:' . $row['transportation_ps']; }
+  if ($row['invoice_type'] == 3)       { $parts[] = '統編：' . $row['invoice_num'] . "\n" . '公司：' . $row['invoice_title']; }
+  if ($row['ps'] != "")                { $parts[] = '備註:' . $row['ps']; }
 
-	//Excel檔名
-	$filename = "orderlist.xls";
+  $excel_array[] = array(
+    $row['order_state'],
+    $row['total_amount'],
+    substr($mem_lv, -1) . '-W' . $row['member_no'],
+    $row['order_code'],
+    $row['uptime'],
+    $row['buytime'],
+    'C17' . sprintf("%06d", $row['no']),
+    isset($pay_mode_array[$row['pay_mode']]) ? $pay_mode_array[$row['pay_mode']] : $row['pay_mode'],
+    $row['invoice_name'],
+    $phone,
+    $row['invoice_zipcode'] . $row['invoice_city'] . $row['invoice_area'] . $row['invoice_addr'],
+    implode("\n", $parts),
+  );
+}
 
- 	//產生header
- 	header("Content-type: application/vnd.ms-excel");
-	header("Content-Disposition: attachment; filename=$filename" );
-	header("Expires: 0");
-	header("Cache-Control: must-revalidate, post-check=0,pre-check=0");
-	header("Pragma: public"); 
-	
-	//Save Excel 5 file 保存
-	require_once('../../class/PHPExcel/Writer/Excel5.php');
-	$objWriter = new PHPExcel_Writer_Excel5($objPHPExcel);
-	$objWriter->save($filename);
-	
-	//產生Excel下載檔
-	$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');//20003格式
-	
-	$objWriter->save('php://output');
- 
+$objPHPExcel = new PHPExcel();
+$objPHPExcel->getProperties()->setCreator("CART 後台")
+  ->setLastModifiedBy("CART 後台")
+  ->setTitle("訂單彙整")
+  ->setSubject("訂單彙整")
+  ->setDescription("訂單彙整匯出")
+  ->setKeywords("orderlist")
+  ->setCategory("orderlist");
+$objPHPExcel->setActiveSheetIndex(0);
+$sheet = $objPHPExcel->getActiveSheet();
 
-	}else{
-		echo"沒有符合的資料";	
-    }
-	 
-		
-	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>無標題文件</title>
-</head>
+$col_all_num = count($excel_array[0]);
+for ($c = 0; $c < $col_all_num; $c++) {
+  $sheet->getColumnDimension(PHPExcel_Cell::stringFromColumnIndex($c))->setWidth(10);
+}
 
-<body>
-</body>
-</html>
+// 一律以字串寫入（原本的欄位名稱陣列少了引號、最後還重複了 AL/AM/AN，已改用函式產生欄位代號）
+foreach ($excel_array as $r => $line) {
+  foreach ($line as $c => $value) {
+    $cell = PHPExcel_Cell::stringFromColumnIndex($c) . ($r + 1);
+    $sheet->setCellValueExplicit($cell, (string)$value, PHPExcel_Cell_DataType::TYPE_STRING);
+  }
+}
+
+// 清掉前面可能的輸出，避免檔案損毀
+while (ob_get_level() > 0) {
+  ob_end_clean();
+}
+
+// 原本還會先把檔案存到伺服器上（$objWriter->save($filename)），而且檔尾多了一段空白 HTML 會被附加進 xls，都已移除
+$filename = "orderlist_" . date("Ymd_His") . ".xls";
+header("Content-Type: application/vnd.ms-excel");
+header("Content-Disposition: attachment; filename=\"{$filename}\"");
+header("Expires: 0");
+header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+header("Pragma: public");
+
+$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+$objWriter->save('php://output');
+exit;

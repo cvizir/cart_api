@@ -1,193 +1,234 @@
 <?php
-	require_once("../../include/config.inc.php");
-	include_once("../session.php");
-	require_once("../../include/function.php");
-	require_once("../../include/DBClass.php");
+require_once("../../include/config.inc.php");
+include_once("../session.php");
+require_once("../../include/function.php");
+require_once("../../include/DBClass.php");
 
-	$sh_post = $_SERVER['QUERY_STRING'];
-	$pagesize=$_REQUEST["pagesize"];
-	$total=$_REQUEST["total"];
-	$total--;
-	if($page!=1){
-		if(($page-1)*$pagesize>=$total){
-			$page--;
-		}
-	}
-	
+function req($key) {
+  return isset($_REQUEST[$key]) ? trim($_REQUEST[$key]) : '';
+}
 
+// 金額欄位：不是數字就當 0
+function num($v) {
+  return is_numeric($v) ? $v : 0;
+}
 
-	$no=trim($_REQUEST['no']);
-	$cms_mode=trim($_REQUEST['cms_mode']);
-    $add_pic=$_FILES['add_pic'];
-    $del_pic=$_POST['del_pic'];	
-	$member_code=$_REQUEST['member_code'];
-	$db_name='orderlist';
- 	$web_url="list.php?page=$page";
- 	$trace=0;
+// 日期欄位：空白、0000- 開頭或格式不對都存成 NULL
+function dateOrNull($v) {
+  if ($v === '' || substr($v, 0, 4) === '0000' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
+    return null;
+  }
+  return $v;
+}
 
-	$admin_id=$_SESSION["admin_id"];
-	$admin_psw=$_SESSION["admin_psw"];	
-	$test_sdd='time='.date("Y-m-d H:i:s").';'.'no='.$no.';'.'admin_id='.$admin_id.';'.'admin_psw='.$admin_psw.";actioon=$cms_mode;";
-	$sql_sdd="update `test` set `aos` = CONCAT(aos,'$test_sdd') WHERE `no`='1'"; // 把 def 加在此欄後面
-	mysql_query($sql_sdd);
+$cms_mode = req('cms_mode');
+$no       = req('no');
+$page     = max(1, (int)req('page'));
+$pagesize = (int)req('pagesize');
+if ($pagesize < 1) { $pagesize = 40; }
+$total    = (int)req('total');
 
-    if($_REQUEST['buytime']=="" || $_REQUEST['buytime']=='0000-00-00 00:00:00' ){ $buytime=date("Y-m-d H:i:s"); }else{ $buytime=$_REQUEST['buytime'];}
-    $_REQUEST['uptime']=date("Y-m-d H:i:s");
+$db_name = 'orderlist';
+$trace   = 0;
+$now     = date("Y-m-d H:i:s");
 
-	$check_txt='orderlist';
-	$check_type=$cms_mode;
-	checkAdmimPv($_SESSION["admin_pv"],$check_txt,$check_type,$trace);
-	
-   	$sql_data=array(
-        order_code=>$_REQUEST['order_code'],
-				transaction_Id=>$_REQUEST['transaction_Id'],
-        uptime=>$_REQUEST['uptime'],
-        buytime=>$_REQUEST['buytime'],
-        member_no=>$_REQUEST['member_no'],
-        member_code=>$_REQUEST['member_code'],
-		post_cpy=>$_REQUEST['post_cpy'],
-        post_date=>$_REQUEST['post_date'],
-        post_num=>$_REQUEST['post_num'],
-		atm_num=>$_REQUEST['atm_num'],
-        store_num=>$_REQUEST['store_num'],	
-        order_info=>$_REQUEST['order_info'],
-        order_html=>$_REQUEST['order_html'],
-        amount=>$_REQUEST['amount'],
-        invoice_name=>addslashes($_REQUEST['invoice_name']),
-        invoice_email=>$_REQUEST['invoice_email'],
-        invoice_tel=>$_REQUEST['invoice_tel'],
-        invoice_get=>$_REQUEST['invoice_get'],
-        invoice_country=>$_REQUEST['invoice_country'],
-        invoice_city=>$_REQUEST['invoice_city'],
-        invoice_area=>$_REQUEST['invoice_area'],
-        invoice_addr=>addslashes($_REQUEST['invoice_addr']),
-        invoice_zipcode=>$_REQUEST['invoice_zipcode'],
-        receives_name=>$_REQUEST['receives_name'],
-        receives_tel=>$_REQUEST['receives_tel'],
-        receives_mphone=>$_REQUEST['receives_mphone'],
-        receives_country=>$_REQUEST['receives_country'],
-        receives_city=>$_REQUEST['receives_city'],
-        receives_area=>$_REQUEST['receives_area'],
-        receives_addr=>$_REQUEST['receives_addr'],
-        receives_zipcode=>$_REQUEST['receives_zipcode'],
-        receives_time=>$_REQUEST['receives_time'],
-        invoice_type=>$_REQUEST['invoice_type'],
-        invoice_title=>$_REQUEST['invoice_title'],
-        invoice_num=>$_REQUEST['invoice_num'],
-        transportation=>$_REQUEST['transportation'],
-        pay_mode=>$_REQUEST['pay_mode'],
-        pay_mode_price=>$_REQUEST['pay_mode_price'],
-        pay_info=>$_REQUEST['pay_info'],
-        get_mode=>$_REQUEST['get_mode'],
-        ps=>addslashes($_REQUEST['ps']),
-        order_ps=>$_REQUEST['order_ps'],
-        transportation_ps=>addslashes($_REQUEST['transportation_ps']),
-		other_price=>$_REQUEST['other_price'],
-		other_ps=>addslashes($_REQUEST['other_ps']),
-        total_amount=>$_REQUEST['total_amount'],
-        order_state=>$_REQUEST['order_state'],
-        post_date=>$_REQUEST['post_date'],
-		pre_post_date=>$_REQUEST['pre_post_date']
-    );
+// 只允許已知的訂單狀態
+$order_states = array('未付款', '待付款', '完成訂購', '確認運費', '訂單處理中', '刷卡失敗',
+                      '取消訂單', '已出貨', '先出貨待付款', '退貨訂單', '失效訂單');
+$order_state  = req('order_state');
 
+/*
+ * 可以編輯的欄位（與 edit.php 表單上「沒有 readonly」的欄位一致）。
+ * 原本還會把 readonly 的欄位、以及表單上根本沒有的欄位（transaction_Id、receives_*、order_html、invoice_get…）
+ * 一起寫回資料庫，結果每存一次，LINE PAY 訂單編碼等資料就被清成空白。
+ */
+$sql_data = array(
+  'uptime'            => $now,
+  'order_state'       => $order_state,
+  'post_cpy'          => req('post_cpy'),
+  'pre_post_date'     => dateOrNull(req('pre_post_date')),
+  'post_date'         => dateOrNull(req('post_date')),
+  'post_num'          => req('post_num'),
+  'order_ps'          => req('order_ps'),
+  'atm_num'           => req('atm_num'),
+  'store_num'         => req('store_num'),
+  'invoice_name'      => req('invoice_name'),     // 原本多做了一次 addslashes，加上預處理會造成資料多出反斜線
+  'invoice_tel'       => req('invoice_tel'),
+  'invoice_country'   => req('invoice_country'),
+  'invoice_zipcode'   => req('invoice_zipcode'),
+  'invoice_city'      => req('invoice_city'),
+  'invoice_area'      => req('invoice_area'),
+  'invoice_addr'      => req('invoice_addr'),
+  'pay_mode'          => req('pay_mode'),
+  'get_mode'          => req('get_mode'),
+  'invoice_type'      => req('invoice_type'),
+  'transportation_ps' => req('transportation_ps'),
+  'pay_mode_price'    => num(req('pay_mode_price')),
+  'other_price'       => num(req('other_price')),
+  'other_ps'          => req('other_ps'),
+  'total_amount'      => num(req('total_amount')),
+  'ps'                => req('ps'),
+);
 
-	
-	//print_r($_POST["del_pic"]);
+/**
+ * 訂單變成「已出貨」時，累計會員消費金額並依門檻升級會員等級。
+ * 規則維持原本：lv_1 消費滿 1 升 lv_2、滿 1200 升 lv_3；lv_2 滿 1200 升 lv_3；升級時扣掉門檻金額。
+ */
+function updateMemberLevel($member_code, $total_amount) {
+  global $pdo;
 
+  $stmt = $pdo->prepare("UPDATE `member` SET `buy_total` = `buy_total` + ? WHERE `member_code` = ?");
+  $stmt->execute(array($total_amount, $member_code));
 
-	switch($cms_mode){
-	case 'add':
-		$sql_data['order_code']=createOrderCode($tb_name,'order_code',10);
-		$insert_id=insertArray($db_name,$sql_data,$trace);
-		$msg = "新增成功!";
-	break;
-	
-	case 'edit':
-		$where_str=" WHERE `no`='$no'";
-        updataArray($db_name,$where_str,$sql_data,$trace);
-		$msg = "更新成功!!";
-		$insert_id= $no;
-		if($_REQUEST['order_state']=='已出貨' && $member_code!='' && $_REQUEST['old_order_state']!='已出貨'){
-			
-			
-			$total_amount=$_REQUEST['total_amount'];
-			$sql_update="UPDATE `member` SET `buy_total` = `buy_total` + $total_amount WHERE `member_code`='$member_code'";
-    		mysql_query($sql_update);
+  $stmt = $pdo->prepare("SELECT `buy_total`, `mem_lv` FROM `member` WHERE `member_code` = ?");
+  $stmt->execute(array($member_code));
+  $row_member = $stmt->fetch(PDO::FETCH_ASSOC);
+  if (!$row_member) { return; }
 
-			
-			/* ---------------------- 會員等級 -------------------------- */
-			
-			$now_dtae=date("Y-m-d");
-			
-			$sql_member="SELECT * FROM `member` WHERE `member_code`='$member_code'";
-			$rs_member=mysql_query($sql_member);
-			$num_member=mysql_num_rows($rs_member);
-			
-			while($row_member=mysql_fetch_array($rs_member,MYSQL_ASSOC)){
-			$uptime=date("Y-m-d H:i:s");
-			$member_code=$row_member['member_code'];
-			$buy_total=$row_member['buy_total'];
-			$mem_lv=$row_member['mem_lv'];
-			$mem_lv_start=date("Y-m-d");
-			$mem_lv_end=date("Y-m-d",strtotime(date("Y-m-d") . "+366 days"));
-			
-			
+  $buy_total = $row_member['buy_total'];
+  $mem_lv    = $row_member['mem_lv'];
+  $set_lv    = '';
+  $set_total = 0;
 
-			if($mem_lv=='lv_2'){
-				if($buy_total>=1200){
-					$set_mem_lv='lv_3';
-					$set_buy_total=$buy_total-1200;
-				}
-			}
-			if($mem_lv=='lv_1'){
-				if($buy_total>=1){
-					$set_mem_lv='lv_2';
-					$set_buy_total=$buy_total-1;
-				}
-				if($buy_total>=1200){
-					$set_mem_lv='lv_3';
-					$set_buy_total=$buy_total-1200;
-				}
-			}
-			
-			if($set_mem_lv=='lv_2' || $set_mem_lv=='lv_3'){
-			$sql_update="UPDATE `member` SET `uptime` = '$uptime'  , `mem_lv` = '$set_mem_lv' , `mem_lv_start` = '$mem_lv_start' , `mem_lv_end` = '$mem_lv_end' , `buy_total` = '$set_buy_total' WHERE `member_code` ='$member_code'";
-			mysql_query($sql_update);
-			echo"$sql_update";
-			}
-				
-			}
-			
-			/* ---------------------- 會員等級 END -------------------------- */
-			
-			
-			
-			
-			
-			
-			
-		}
-	break;
-	
-	case 'del':
-	    $where_str=" WHERE `order_code`='$order_code'";
-	    deleteDb($db_name,$where_str,$sql_data,$trace);
-		$msg = "刪除成功!!";
-	break;
-	
-	default:
-		$msg = "不正確的操作模式!!";
-	}
-	
+  if ($mem_lv == 'lv_2') {
+    if ($buy_total >= 1200) {
+      $set_lv    = 'lv_3';
+      $set_total = $buy_total - 1200;
+    }
+  }
+  if ($mem_lv == 'lv_1') {
+    if ($buy_total >= 1) {
+      $set_lv    = 'lv_2';
+      $set_total = $buy_total - 1;
+    }
+    if ($buy_total >= 1200) {
+      $set_lv    = 'lv_3';
+      $set_total = $buy_total - 1200;
+    }
+  }
 
+  if ($set_lv == 'lv_2' || $set_lv == 'lv_3') {
+    $stmt = $pdo->prepare("UPDATE `member` SET `uptime` = ?, `mem_lv` = ?, `mem_lv_start` = ?, `mem_lv_end` = ?, `buy_total` = ? WHERE `member_code` = ?");
+    $stmt->execute(array(
+      date("Y-m-d H:i:s"),
+      $set_lv,
+      date("Y-m-d"),
+      date("Y-m-d", strtotime(date("Y-m-d") . "+366 days")),
+      $set_total,
+      $member_code
+    ));
+  }
+}
 
+$ok  = true;
+$msg = "";
 
-	
+try {
+  switch ($cms_mode) {
+    case 'add':
+      if (!in_array($order_state, $order_states, true)) {
+        $ok  = false;
+        $msg = "請選擇正確的訂單狀態!!";
+        break;
+      }
+      // 新增時才需要寫入原本唯讀的欄位（原本的 buytime 預設值算好了卻沒有使用，這裡改正）
+      $sql_data['order_code']   = createOrderCode($db_name, 'order_code', 10);   // 原本誤用未定義的 $tb_name
+      $sql_data['buytime']      = $now;
+      $sql_data['member_no']    = req('member_no');
+      $sql_data['member_code']  = req('member_code');
+      $sql_data['invoice_email'] = req('invoice_email');
+      $sql_data['invoice_title'] = req('invoice_title');
+      $sql_data['invoice_num']  = req('invoice_num');
+      $sql_data['amount']       = num(req('amount'));
+      $sql_data['transportation'] = num(req('transportation'));
+      $sql_data['pay_info']     = isset($_REQUEST['pay_info']) ? $_REQUEST['pay_info'] : '';
+      $sql_data['order_info']   = isset($_REQUEST['order_info']) ? $_REQUEST['order_info'] : '';
+      insertArray($db_name, $sql_data, $trace);
+      $msg = "新增成功!";
+      break;
 
+    case 'edit':
+      if ($no === '') {
+        $ok  = false;
+        $msg = "缺少訂單編號!!";
+        break;
+      }
+      if (!in_array($order_state, $order_states, true)) {
+        $ok  = false;
+        $msg = "請選擇正確的訂單狀態!!";
+        break;
+      }
+
+      $pdo->beginTransaction();
+
+      // 以資料庫中的狀態與會員為準（原本相信表單送來的 old_order_state / member_code，可以被竄改，也會因為兩人同時編輯而重複累計）
+      $stmt = $pdo->prepare("SELECT `order_state`, `member_code` FROM `{$db_name}` WHERE `no` = ? FOR UPDATE");
+      $stmt->execute(array($no));
+      $old = $stmt->fetch(PDO::FETCH_ASSOC);
+      if (!$old) {
+        $pdo->rollBack();
+        $ok  = false;
+        $msg = "找不到這筆訂單!!";
+        break;
+      }
+
+      $sets = array();
+      foreach ($sql_data as $key => $value) {
+        $sets[] = "`{$key}` = :{$key}";
+      }
+      $stmt = $pdo->prepare("UPDATE `{$db_name}` SET " . implode(", ", $sets) . " WHERE `no` = :_no");
+      foreach ($sql_data as $key => $value) {
+        $stmt->bindValue(":{$key}", $value, ($value === null) ? PDO::PARAM_NULL : PDO::PARAM_STR);
+      }
+      $stmt->bindValue(":_no", $no);
+      $stmt->execute();
+
+      // 第一次變成「已出貨」時，累計會員消費並檢查升級
+      if ($order_state == '已出貨' && $old['order_state'] != '已出貨' && $old['member_code'] != '') {
+        updateMemberLevel($old['member_code'], $sql_data['total_amount']);
+      }
+
+      $pdo->commit();
+      $msg = "更新成功!!";
+      break;
+
+    case 'del':
+      if ($no === '') {
+        $ok  = false;
+        $msg = "缺少訂單編號!!";
+        break;
+      }
+      // 原本用沒定義的 $order_code 當條件（等於 WHERE order_code=''），永遠刪不到；改用訂單編號
+      $stmt = $pdo->prepare("DELETE FROM `{$db_name}` WHERE `no` = ?");
+      $stmt->execute(array($no));
+      $msg = "刪除成功!!";
+
+      $total--;
+      if ($page > 1 && ($page - 1) * $pagesize >= $total) {
+        $page--;
+      }
+      break;
+
+    default:
+      $ok  = false;
+      $msg = "不正確的操作模式!!";
+  }
+} catch (PDOException $e) {
+  if ($pdo->inTransaction()) {
+    $pdo->rollBack();
+  }
+  error_log("orderlist save error: " . $e->getMessage());
+  $ok  = false;
+  $msg = "資料庫執行失敗，請稍後再試!!";
+}
+
+// 回列表時保留原本的搜尋條件
+$web_url = "list.php?page=" . $page
+         . "&sh_mem=" . urlencode(req('sh_mem'))
+         . "&sh_txt=" . urlencode(req('sh_txt'))
+         . "&sh_order=" . urlencode(req('sh_order'));
 ?>
-<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-<script language="JavaScript" type="text/JavaScript">
- 	alert("<?=$msg?>");
-	window.location.href="<?php echo $web_url; ?>";
-</script>    
-
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<?php
+// 成功 → 回列表；失敗 → 回上一頁保留表單內容
+alertHref($msg, $ok ? $web_url : "");

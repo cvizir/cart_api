@@ -1,76 +1,82 @@
-<?php 
+<?php
+// 重寄訂單 Email。edit.php 以 AJAX 呼叫，回傳 JSON：{"ok":true} 或 {"ok":false,"msg":"..."}
+require_once("../../include/config.inc.php");
+include_once("../session.php");     // 原本沒有載入，任何人都能觸發寄信
+require_once("../../include/function.php");
 
-	require_once("../../include/config.inc.php");
-	require_once("../../include/function.php");
-	require_once("../../include/DBClass.php");
-	
-	$member_code=$_REQUEST["member_code"];
-	$order_code=$_REQUEST["order_code"];	
-	$no=$_REQUEST["no"];
-		
-    $sql_orderlist="SELECT * FROM `orderlist` WHERE `no`='$no' AND `order_code`='$order_code' AND `member_code`='$member_code'";
-    $rs_orderlist=mysql_query($sql_orderlist);
-    $num_orderlist=mysql_num_rows($rs_orderlist);
-    $row_orderlist=mysql_fetch_array($rs_orderlist,MYSQL_ASSOC);
-	
-	$order_num='C17'.sprintf("%06d",$row_orderlist['no']); 
-	
-	
-	if($no!='' && $order_code!='' && $num_orderlist>=1){
+header('Content-Type: application/json; charset=utf-8');
 
- 	// 建立CURL連線
-	$ch = curl_init();
-	// 設定擷取的URL網址
-	curl_setopt($ch, CURLOPT_URL, "https://shopping.windmill.com.tw/email_order.php?order_code=$order_code&member_code=$member_code");
-	curl_setopt($ch, CURLOPT_HEADER, false);
-	//將curl_exec()獲取的訊息以文件流的形式返回，而不是直接輸出。
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-	//設定要傳的 變數A=值A & 變數B=值B (中間要用&符號串接)
-	curl_setopt($ch, CURLOPT_NOSIGNAL, 1); // CURLOPT_NOSIGNAL 設為 1
-    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 900); // 設定最長執行 900 毫秒
-	//$PostData = "a=abc&b=def";
-	$PostData = "order_code=$order_code&member_code=$member_code";
-	//設定CURLOPT_POST 為 1或true，表示要用POST方式傳遞
-	curl_setopt($ch, CURLOPT_POST, 1);
-	//CURLOPT_POSTFIELDS 後面則是要傳接的POST資料。
-	curl_setopt($ch, CURLOPT_POSTFIELDS, $PostData);
-	// 執行
-	$html_code_order=curl_exec($ch);
-	// 關閉CURL連線
-	curl_close($ch);
+function out($ok, $msg = '') {
+  echo json_encode(array('ok' => $ok, 'msg' => $msg));
+  exit;
+}
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  out(false, '不正確的請求方式');
+}
 
+$member_code = isset($_POST['member_code']) ? trim($_POST['member_code']) : '';
+$order_code  = isset($_POST['order_code']) ? trim($_POST['order_code']) : '';
+$no          = isset($_POST['no']) ? trim($_POST['no']) : '';
 
-	$to = trim($row_orderlist['invoice_email']);
-	
-    $mail = "『風車寶貝』 線上購物網<service@windmill.com.tw>";
-	
-	$subject_tr = base64_encode('完成運費審核，待付款通知-訂單編號: '."$order_num");   
-	$subject = '=?utf8?B?'.$subject_tr.'?=';  
-	
-	
-			
-	$html=$html.'感謝您訂購『風車寶貝』線上購物網的商品，您可 <a href="https://shopping.windmill.com.tw/inquireContent.php?order_code='.$order_code.'">點此查看</a> 訂單明細。 '.'<br /><br />';
-	$html=$html.'此信件為訂單通知，待付款金額確認無誤後，商品預計3~5個工作天送達；若您為國外訂單，待確認運費後，請至「訂單查詢」頁面選擇付款，確認無誤後即為您安排出貨。';
-	
+if ($no === '' || $order_code === '') {
+  out(false, '參數不完整');
+}
 
-	$html=$html.$html_code_order;
-	
-	$html=$html.'';
+try {
+  $stmt = $pdo->prepare("SELECT * FROM `orderlist` WHERE `no` = ? AND `order_code` = ? AND `member_code` = ?");
+  $stmt->execute(array($no, $order_code, $member_code));
+  $row_orderlist = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  error_log("resend query error: " . $e->getMessage());
+  out(false, '資料庫執行失敗');
+}
 
-	$html='<div style="color:#000;">'.$html.'</div>';
+if (!$row_orderlist) {
+  out(false, '找不到這筆訂單');
+}
 
-	// 寄送 HTML 格式郵件, 必需設定 Content-type 
-	$headers  = "MIME-Version: 1.0\r\n";
-	$headers .= "Content-type: text/html; charset=utf-8\r\n";
+// 收件信箱必須是合法的 Email（同時避免標頭注入）
+$to = trim($row_orderlist['invoice_email']);
+if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+  out(false, '訂單信箱格式不正確');
+}
 
-	//sleep for 5 seconds
-	sleep(5);
-	
-	mail($to, $subject, $html, "From:".$mail."\n".$headers);	
-	//mail('hoplionservice@gmail.com', $subject, $html, "From:".$mail."\n".$headers);	 */
+$order_num = 'C17' . sprintf("%06d", $row_orderlist['no']);
 
-	}
+// 向前台取得訂單明細的 HTML
+$q  = "order_code=" . urlencode($order_code) . "&member_code=" . urlencode($member_code);
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://shopping.windmill.com.tw/email_order.php?" . $q);
+curl_setopt($ch, CURLOPT_HEADER, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
+// 原本的逾時只有 900 毫秒，前台稍慢就會取不到明細，信裡就少了訂單內容；改成 15 秒
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+$html_code_order = curl_exec($ch);
+curl_close($ch);
 
+if ($html_code_order === false || $html_code_order === '') {
+  out(false, '無法取得訂單明細，信件未寄出');
+}
 
-?>
+$from_name = '『風車寶貝』 線上購物網';
+$from      = '=?UTF-8?B?' . base64_encode($from_name) . '?= <service@windmill.com.tw>';
+$subject   = '=?UTF-8?B?' . base64_encode('完成運費審核，待付款通知-訂單編號: ' . $order_num) . '?=';
+
+$html  = '感謝您訂購『風車寶貝』線上購物網的商品，您可 <a href="https://shopping.windmill.com.tw/inquireContent.php?order_code=' . urlencode($order_code) . '">點此查看</a> 訂單明細。<br /><br />';
+$html .= '此信件為訂單通知，待付款金額確認無誤後，商品預計3~5個工作天送達；若您為國外訂單，待確認運費後，請至「訂單查詢」頁面選擇付款，確認無誤後即為您安排出貨。';
+$html .= $html_code_order;
+$html  = '<div style="color:#000;">' . $html . '</div>';
+
+$headers  = "From: " . $from . "\r\n";
+$headers .= "MIME-Version: 1.0\r\n";
+$headers .= "Content-type: text/html; charset=utf-8\r\n";
+
+// 原本寄信前有一行 sleep(5)，沒有任何作用只會讓使用者多等 5 秒，已移除
+if (mail($to, $subject, $html, $headers)) {
+  out(true);
+}
+out(false, '寄信失敗，請檢查郵件伺服器設定');

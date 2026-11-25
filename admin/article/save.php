@@ -60,11 +60,6 @@ $db_name = 'article';
 $trace   = 0;
 $now     = date("Y-m-d H:i:s");
 
-// 權限檢查（維持原本的呼叫方式）
-$check_txt  = 'article';
-$check_type = $cms_mode;
-checkAdmimPv($_SESSION["admin_pv"], $check_txt, $check_type, $trace);
-
 // 上下架時間：空白時給預設值（原本的 0000-00-00 與 2020-00-00 都不是合法日期，
 // 而且 2020 已經過去，會讓沒填下架日期的文章全部顯示「已結束」）
 $start_time = req('start_time');

@@ -37,11 +37,6 @@ $admin_pv = isset($_SESSION["admin_pv"]) ? $_SESSION["admin_pv"] : '';
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
-<?php
-$check_txt  = 'article';
-$check_type = 'read';
-checkAdmimPv($admin_pv, $check_txt, $check_type, $trace);
-?>
 <meta http-equiv="cache-control" content="no-cache">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
