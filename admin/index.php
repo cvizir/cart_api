@@ -1,16 +1,30 @@
 <?php
-require_once("../config.php");
+require_once(dirname(__FILE__) . "/../include/config.inc.php");
+require_once(dirname(__FILE__) . "/../include/function.php");
+require_once(dirname(__FILE__) . "/auth.inc.php");
+
+if (!function_exists('h')) {
+  function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+}
+
+adminSessionStart();
+
+// 已經登入就直接進後台
+if (!empty($_SESSION['admin_id'])) {
+  header("Location: main.php");
+  exit;
+}
+
+$csrf = adminCsrfToken();
+header("Content-Type: text/html; charset=utf-8");
 ?>
-<!DOCTYPE html
-  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title><?= ADMIN_TITLE ?></title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php echo h(ADMIN_TITLE); ?></title>
+<link href="style.css" rel="stylesheet" type="text/css" />
 </head>
-
 <body>
   <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
@@ -26,10 +40,11 @@ require_once("../config.php");
     </tr>
     <tr>
       <td height="280" background="images/index_board_bg.jpg">
-        <form id="form1" name="form1" method="post" action="login.php">
+        <form id="form1" name="form1" method="post" action="login.php" autocomplete="off">
+          <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>" />
           <table border="0" align="center" cellpadding="5" cellspacing="0">
             <tr>
-              <td height="40" colspan="2" align="center" class="index_title"><?php echo ADMIN_TITLE; ?></td>
+              <td height="40" colspan="2" align="center" class="index_title"><?php echo h(ADMIN_TITLE); ?></td>
             </tr>
             <tr>
               <td align="right" class="index_input_text">ID：</td>
@@ -51,5 +66,4 @@ require_once("../config.php");
     </tr>
   </table>
 </body>
-
 </html>
