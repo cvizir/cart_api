@@ -59,7 +59,7 @@ $self     = basename($_SERVER['PHP_SELF']);   // 檔名改了也不會壞
   .maindash { position: absolute; width: 600px; min-height: 20px; margin-bottom: 5px; padding: 5px; border: 1px dashed blue; background: #ececec; opacity: 0.7; }
   .dash { position: static; width: 600px; height: 20px; margin-bottom: 5px; border: 1px dashed #f00; }
 </style>
-<script type="text/javascript" src="../../script/jquery-1.7.1.js"></script>
+<script type="text/javascript" src="../script/jquery-1.7.1.js"></script>
 <script type="text/javascript">
 $(document).ready(function () {
   var range = { x: 0, y: 0 };                         // 滑鼠相對元素的偏移量

@@ -87,8 +87,8 @@ $can_edit = empty($admin_pv_check) || strExist($admin_pv, 'orderlist_et');
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
 <link href="../style.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="../../script/jquery-1.6.3.min.js"></script>
-<script type="text/javascript" src="../../script/datepicker/WdatePicker.js"></script>
+<script type="text/javascript" src="../script/jquery-1.6.3.min.js"></script>
+<script type="text/javascript" src="../script/datepicker/WdatePicker.js"></script>
 <script language="JavaScript" type="text/JavaScript">
   var sh_post = <?php echo json_encode($sh_post, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
 
@@ -158,9 +158,9 @@ $can_edit = empty($admin_pv_check) || strExist($admin_pv, 'orderlist_et');
                   </select>
                   日期
                   <input type="text" value="" name="start_time" id="start_time">
-                  <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'start_time'})">&nbsp;~
+                  <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'start_time'})">&nbsp;~
                   <input type="text" value="" name="end_time" id="end_time">
-                  <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'end_time'})">
+                  <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'end_time'})">
                   <input type="button" name="button1" id="button1" value="明細匯出" onClick="doExport('order_tr.php')">
                   <input type="button" name="button2" id="button2" value="彙整匯出" onClick="doExport('excel_tr.php')">
                 </form>

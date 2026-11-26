@@ -337,9 +337,9 @@ $mem_name = isset($row_member['name']) ? $row_member['name'] : '';
 <meta http-equiv="cache-control" content="no-cache">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<script type="text/javascript" src="../../script/jquery-1.6.3.min.js"></script>
-<script type="text/javascript" src="../../script/datepicker/WdatePicker.js"></script>
-<script type="text/javascript" src="../../script/tw_zip.js"></script>
+<script type="text/javascript" src="../script/jquery-1.6.3.min.js"></script>
+<script type="text/javascript" src="../script/datepicker/WdatePicker.js"></script>
+<script type="text/javascript" src="../script/tw_zip.js"></script>
 <link href="../style.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript">
   // 重寄訂單 Email（resend.php 會回傳 JSON）
@@ -475,14 +475,14 @@ $mem_name = isset($row_member['name']) ? $row_member['name'] : '';
                       <td align="center" class="tb_edit_title">預購寄送日期</td>
                       <td colspan="3">
                         <input type="text" value="<?php echo h($orderlist['pre_post_date']); ?>" name="pre_post_date" id="pre_post_date">
-                        <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'pre_post_date'})">
+                        <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'pre_post_date'})">
                       </td>
                     </tr>
                     <tr>
                       <td align="center" class="tb_edit_title">寄送日期</td>
                       <td colspan="3">
                         <input type="text" value="<?php echo h($orderlist['post_date']); ?>" name="post_date" id="post_date">
-                        <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'post_date'})">
+                        <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'post_date'})">
                       </td>
                     </tr>
                     <tr>

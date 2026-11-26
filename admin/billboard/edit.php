@@ -51,8 +51,8 @@ if ($trace == 1) {
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
-<script type="text/javascript" src="../../script/ckeditor/ckeditor.js"></script>
-<script type="text/javascript" src="../../script/datepicker/WdatePicker.js"></script>
+<script type="text/javascript" src="../script/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="../script/datepicker/WdatePicker.js"></script>
 <link href="../style.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript">
   function validator(f) {
@@ -143,14 +143,14 @@ if ($trace == 1) {
                           <td class="tb_edit_title">上架日期</td>
                           <td class="tb_edit_info">
                             <input type="text" value="<?php echo h($billboard['start_time']); ?>" name="start_time" id="start_time">
-                            <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'start_time'})">
+                            <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'start_time'})">
                           </td>
                         </tr>
                         <tr>
                           <td class="tb_edit_title">下架日期</td>
                           <td class="tb_edit_info">
                             <input type="text" value="<?php echo h($billboard['end_time']); ?>" name="end_time" id="end_time">
-                            <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'end_time'})">
+                            <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'end_time'})">
                           </td>
                         </tr>
                         <tr>

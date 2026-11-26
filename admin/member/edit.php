@@ -49,7 +49,7 @@ if ($member_code !== '') {
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title><?php echo h(ADMIN_TITLE); ?></title>
-  <script type="text/javascript" src="../../script/datepicker/WdatePicker.js"></script>
+  <script type="text/javascript" src="../script/datepicker/WdatePicker.js"></script>
   <link href="../style.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript">
     function validator(f) {
@@ -130,7 +130,7 @@ if ($member_code !== '') {
                             <td class="tb_edit_title">生日</td>
                             <td class="tb_edit_info">
                               <input type="text" value="<?php echo h($product['birthday']); ?>" name="birthday" id="birthday">
-                              <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'birthday'})">
+                              <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'birthday'})">
                             </td>
                           </tr>
                           <tr>

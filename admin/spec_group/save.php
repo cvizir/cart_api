@@ -1,88 +1,117 @@
-<?
+<?php
 include_once("../session.php");
 require_once("../../include/config.inc.php");
 require_once("../../include/function.php");
 require_once("../../include/DBClass.php");
 
-startDB();
+// 原本這裡有 print_r($_REQUEST) 與 print_r(spec_group_code) 兩行除錯輸出，會把所有送出的資料印在畫面上，已移除
 
-print_r($_REQUEST);  
-$cms_mode = $_REQUEST["cms_mode"];
-$no = trim($_REQUEST['no']);
-$page = trim($_REQUEST['page']);
-$add_pic = $_FILES['add_pic'];
-$del_pic = $_POST['del_pic'];
-$size_file = $_FILES['size_file'];
-$user_file = $_FILES['user_file'];
-if ($_REQUEST['ishow'] == "") {
-  $_REQUEST['ishow'] = "0";
+function req($key) {
+  return isset($_REQUEST[$key]) ? trim($_REQUEST[$key]) : '';
 }
 
-$sort_old_value = $_REQUEST["sort_old_value"];
-
-print_r($_REQUEST['spec_group_code']);
+$cms_mode        = req('cms_mode');
+$spec_group_code = req('spec_group_code');
+$page            = max(1, (int)req('page'));
+$pagesize        = (int)req('pagesize');
+if ($pagesize < 1) { $pagesize = 20; }
+$total           = (int)req('total');
 
 $db_name = 'spec_group';
-$web_url = "list.php?$sh_post";
-$trace = 1;
+$trace   = 0;   // 原本是 1，會把 SQL 印出來
 
+// 勾選的規格代碼：沒有勾選時 $_REQUEST['spec_code'] 不存在，原本的 join() 會報錯；
+// 這裡只保留合法的代碼（英數字、底線、連字號）
+$spec_codes = array();
+if (isset($_REQUEST['spec_code']) && is_array($_REQUEST['spec_code'])) {
+  foreach ($_REQUEST['spec_code'] as $c) {
+    $c = trim((string)$c);
+    if ($c !== '' && preg_match('/^[A-Za-z0-9_-]+$/', $c)) {
+      $spec_codes[] = $c;
+    }
+  }
+}
+
+// 只寫入 edit.php 表單上有的欄位
 $sql_data = array(
-  'spec_group_code' => $_REQUEST['spec_group_code'],
-  'pdcat_code' => $_REQUEST['pdcat_code'],
-  'spec_code' => join(",", $_REQUEST['spec_code']),
-  'name' => $_REQUEST['name'],
-  'ishow' => $_REQUEST['ishow']
+  'pdcat_code' => req('pdcat_code'),
+  'spec_code'  => implode(",", array_unique($spec_codes)),
+  'name'       => req('name'),
+  'ishow'      => (req('ishow') === '') ? '0' : req('ishow'),
 );
 
+$ok  = true;
+$msg = "";
 
+try {
+  switch ($cms_mode) {
+    case 'add':
+      if ($sql_data['name'] === '') {
+        $ok  = false;
+        $msg = "請輸入規格名稱!!";
+        break;
+      }
+      $sql_data['spec_group_code'] = createCode($db_name, 'spec_group_code', 6);   // 原本誤用未定義的 $tb_name
+      insertArray($db_name, $sql_data, $trace);
+      $msg = "新增成功!";
+      break;
 
+    case 'edit':
+      // 原本 WHERE 條件用了沒定義的 $spec_group_code，等於 WHERE spec_group_code=''，永遠更新不到
+      if ($spec_group_code === '') {
+        $ok  = false;
+        $msg = "缺少規格群組代碼!!";
+        break;
+      }
+      if ($sql_data['name'] === '') {
+        $ok  = false;
+        $msg = "請輸入規格名稱!!";
+        break;
+      }
+      $sets = array();
+      foreach ($sql_data as $key => $value) {
+        $sets[] = "`{$key}` = :{$key}";
+      }
+      $stmt = $pdo->prepare("UPDATE `{$db_name}` SET " . implode(", ", $sets) . " WHERE `spec_group_code` = :_code");
+      foreach ($sql_data as $key => $value) {
+        $stmt->bindValue(":{$key}", $value);
+      }
+      $stmt->bindValue(":_code", $spec_group_code);
+      $stmt->execute();
+      $msg = "更新成功!!";
+      break;
 
-switch ($cms_mode) {
-  case 'add':
+    case 'del':
+      if ($spec_group_code === '') {
+        $ok  = false;
+        $msg = "缺少規格群組代碼!!";
+        break;
+      }
+      $stmt = $pdo->prepare("DELETE FROM `{$db_name}` WHERE `spec_group_code` = ?");
+      $stmt->execute(array($spec_group_code));
+      $msg = "刪除成功!!";
 
-    changSortSet($cms_mode, $db_name, $sort_sql_where, 'm_sort', $_REQUEST['m_sort'], $_REQUEST['sort_old_value'], $trace);
-    $sql_data['spec_group_code'] = createCode($tb_name, 'spec_group_code', 6);
-    $insert_id = insertArray($db_name, $sql_data, $trace);
-    $msg = "新增成功!";
+      // 刪除後若目前頁已沒有資料，退回上一頁
+      $total--;
+      if ($page > 1 && ($page - 1) * $pagesize >= $total) {
+        $page--;
+      }
+      break;
 
-    break;
-
-  case 'edit':
-    changSortSet($cms_mode, $db_name, $sort_sql_where, 'm_sort', $_REQUEST['m_sort'], $_REQUEST['sort_old_value'], $trace);
-    $where_str = " WHERE `spec_group_code`='$spec_group_code'";
-    updataArray($db_name, $where_str, $sql_data, $trace);
-    $msg = "更新成功!!";
-    $insert_id = $no;
-
-    break;
-
-  case 'del':
-    //去除圖檔
-    //刪除m_sort
-    if ($_REQUEST['m_sort'] != '' && $_REQUEST['m_sort'] != '0') {
-      changSortSet($cms_mode, $db_name, $sort_sql_where, 'm_sort', $_REQUEST['m_sort'], 0, $trace);
-    }
-    $where_str = " WHERE `spec_group_code`='$spec_group_code'";
-    deleteDb($db_name, $where_str, $sql_data, $trace);
-    $msg = "刪除成功!!";
-
-    break;
-
-  default:
-    $msg = "不正確的操作模式!!";
+    default:
+      $ok  = false;
+      $msg = "不正確的操作模式!!";
+  }
+} catch (PDOException $e) {
+  error_log("spec_group save error: " . $e->getMessage());
+  $ok  = false;
+  $msg = "資料庫執行失敗，請稍後再試!!";
 }
 
-if ($trace == 1) {
-  echo '$sort_old_value=' . "$sort_old_value";
-  echo '<br>';
-  echo '$sort_new_value=' . $_REQUEST['m_sort'];
-  echo '<br>';
-}
-
-
+// 原本的轉址被註解掉了（//window.location.href），存檔後會停在空白頁；這裡恢復
+$web_url = "list.php?page=" . $page;
 ?>
-<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-<script language="JavaScript" type="text/JavaScript">
-  alert("<?= $msg ?>");
-	// window.location.href="<?php echo $web_url; ?>";
-</script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<?php
+// 成功 → 回列表；失敗 → 回上一頁保留表單內容
+alertHref($msg, $ok ? $web_url : "");

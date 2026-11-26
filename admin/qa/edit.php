@@ -33,8 +33,8 @@ $sort_end = max(99, (int)$qa['m_sort']);
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
-<script type="text/javascript" src="../../script/ckeditor/ckeditor.js"></script>
-<script type="text/javascript" src="../../script/datepicker/WdatePicker.js"></script>
+<script type="text/javascript" src="../script/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="../script/datepicker/WdatePicker.js"></script>
 <link href="../style.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript">
   function validator(f) {
@@ -79,7 +79,7 @@ $sort_end = max(99, (int)$qa['m_sort']);
                           <td width="15%" height="41" align="center" class="tb_edit_title">最後修改時間</td>
                           <td width="84%" class="tb_edit_info">
                             <input name="uptime" type="text" id="uptime" value="<?php echo h($qa['uptime']); ?>" />
-                            <img onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'uptime'})" src="../../script/datepicker/skin/datePicker.gif" width="16" height="22" align="absmiddle">
+                            <img onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'uptime'})" src="../script/datepicker/skin/datePicker.gif" width="16" height="22" align="absmiddle">
                             <span style="color:#888;">（留空則自動使用目前時間）</span>
                           </td>
                         </tr>

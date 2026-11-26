@@ -43,9 +43,9 @@ if (empty($product['pd_mode'])) {
   <meta http-equiv="cache-control" content="no-cache">
   <meta http-equiv="pragma" content="no-cache">
   <meta http-equiv="expires" content="0">
-  <script type="text/javascript" src="../../script/ckeditor/ckeditor.js"></script>
-  <script type="text/javascript" src="../../script/datepicker/WdatePicker.js"></script>
-  <script type="text/javascript" src="../../script/jquery.min.js"></script>
+  <script type="text/javascript" src="../script/ckeditor/ckeditor.js"></script>
+  <script type="text/javascript" src="../script/datepicker/WdatePicker.js"></script>
+  <script type="text/javascript" src="../script/jquery.min.js"></script>
   <script type="text/javascript">
     <?php
     $check_txt = 'product_read';
@@ -101,7 +101,7 @@ if (empty($product['pd_mode'])) {
                       <td class="tb_edit_title">上架日期</td>
                       <td class="tb_edit_info">
                         <input type="text" value="<?= isset($product['release_date']) ? $product['release_date'] : '' ?>" name="release_date" id="release_date">
-                        <img src="../../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'release_date'})">
+                        <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'release_date'})">
                       </td>
                     </tr>
                     <tr>
