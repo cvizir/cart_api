@@ -372,6 +372,9 @@ $mem_name = isset($row_member['name']) ? $row_member['name'] : '';
 <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
 <table width="101%" border="0" cellspacing="0" cellpadding="0">
   <tr>
+    <td colspan="2"><?php require_once("../header.php"); ?></td>
+  </tr>
+  <tr>
     <td width="10%" align="left" bgcolor="#525252" valign="top"><?php require_once("../menu.php"); ?></td>
     <td width="90%" valign="top"><br />
       <br />

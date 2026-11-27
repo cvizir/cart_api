@@ -14,7 +14,7 @@ $pagesize = 20;
 $argument = "";   // 分頁連結額外參數（目前沒有搜尋條件）
 $trace    = 0;
 // 原本的排序條件被註解掉（$order 沒定義）；表單有排序欄位，所以依排序、再依編號排列，換頁順序才穩定
-$order    = " ORDER BY `m_sort` ASC, `no` ASC";
+$order    = " ORDER BY `no` DESC";
 $where    = "";
 $params   = array();
 

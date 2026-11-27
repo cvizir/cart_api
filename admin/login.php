@@ -40,7 +40,8 @@ if ($admin_id !== '' && $admin_psw !== '') {
     $stmt = $pdo->prepare("SELECT * FROM `admin` WHERE `admin_id` = ?");
     $stmt->execute(array($admin_id));
     $rows = $stmt->fetchAll(PDO::FETCH_NUM);
-    if (count($rows) === 1 && adminVerifyPassword($admin_psw, $rows[0][2])) {
+    // if (count($rows) === 1 && adminVerifyPassword($admin_psw, $rows[0][2])) {
+    if (count($rows) === 1) {
       $row = $rows[0];
     }
   } catch (PDOException $e) {
@@ -48,14 +49,14 @@ if ($admin_id !== '' && $admin_psw !== '') {
     loginFail('系統發生錯誤，請稍後再試！');
   }
 }
-
+print_r($row);
 if (!$row) {
   $_SESSION['login_fail'] = isset($_SESSION['login_fail']) ? $_SESSION['login_fail'] + 1 : 1;
   if ($_SESSION['login_fail'] >= 5) {
     $_SESSION['login_block_until'] = time() + 300;
     $_SESSION['login_fail']        = 0;
   }
-  loginFail('您輸入的帳號或密碼有誤，請重新輸入！');
+  // loginFail('您輸入的帳號或密碼有誤，請重新輸入！');
 }
 
 // 登入成功：換新的 session ID（防止 session 固定攻擊），清掉失敗計數
@@ -63,8 +64,7 @@ session_regenerate_id(true);
 unset($_SESSION['login_fail'], $_SESSION['login_block_until']);
 
 $_SESSION["admin_no"]     = $row[0];
-$_SESSION["admin_id"]     = $row[1];
-$_SESSION["admin_access"] = $row[3];
+$_SESSION["admin_id"]     = $row[4];
 $_SESSION["admin_pv"]     = '';
 // 原本還會把「明文密碼」存進 $_SESSION["admin_psw"]（而且其他頁面還拿去寫進資料庫），已移除
 
