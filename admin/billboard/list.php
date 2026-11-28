@@ -39,7 +39,8 @@ function safeUrl($url) {
   return $url;
 }
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -62,79 +63,62 @@ function safeUrl($url) {
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><div align="center"><br />
-      <br />
-      <table width="709" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="744"><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td class="tb_menu_title"><?php echo h($bd_name); ?>-版面管理</td>
-              <td class="tb_menu_title" align="right">
-                <input type="button" value="回主目錄" onClick="window.location.href='../billboard_cat/list.php'" />
-                <input type="button" value="新增廣告" onClick="onAdd()" />
-              </td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top"><table width="100%" height="225">
-            <tr><td valign="bottom">&nbsp;</td></tr>
-            <tr>
-              <td align="center" valign="top">
-                <table width="733" border="1" cellpadding="2" cellspacing="0" bordercolor="#CCCCCC">
-                  <tr>
-                    <td width="87" height="29" align="center" class="tb_list_title">序號</td>
-                    <td width="222" align="center" class="tb_list_title">名稱</td>
-                    <td width="103" align="center" class="tb_list_title">上下架</td>
-                    <td width="161" align="center" class="tb_list_title">編輯</td>
-                  </tr>
-                  <?php
-                  foreach ($billboardList as $list_info) {
-                    $no_js   = h(json_encode((string)$list_info['no']));
-                    $name_js = h(json_encode((string)$list_info['name']));
-                    $link    = safeUrl($list_info['web_url']);
-                    $ishow   = isset($billboard_ishow[$list_info['ishow']]) ? $billboard_ishow[$list_info['ishow']] : '';
-                  ?>
-                  <tr>
-                    <td align="center" class="text_1"><?php echo h($list_info['no']); ?></td>
-                    <td align="center" class="text_1"><?php echo h($list_info['name']); ?>
-                      <?php if ($link !== '') { ?>
-                      &nbsp;<input type="button" class="btn_text" value="連結" onClick="window.open(<?php echo h(json_encode($link)); ?>, '_blank');" />
-                      <?php } ?>
-                    </td>
-                    <td align="center" class="text_1"><?php echo h($ishow); ?></td>
-                    <td align="center" class="text_1">
-                      <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $no_js; ?>)" />
-                      <?php if ($list_info['del_sw'] == '0') { ?>
-                      <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $no_js; ?>, <?php echo $name_js; ?>)" />
-                      <?php } ?>
-                    </td>
-                  </tr>
-                  <?php } ?>
-                  <?php if (empty($billboardList)) { ?>
-                  <tr><td colspan="4" align="center" class="text_1">目前沒有資料</td></tr>
-                  <?php } ?>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" class="page"><span class="wd_white_12">
-                <?php echo $billboardClass->showPageMenu($argument); ?>
-              </span></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </div></td>
-  </tr>
-</table>
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_sm">
+        <div class="panel_head tb_menu_title">
+          <div><?php echo h($bd_name); ?>-版面管理</div>
+          <div><input type="button" value="回主目錄" onClick="window.location.href='../billboard_cat/list.php'" />
+          <input type="button" value="新增廣告" onClick="onAdd()" /></div>
+        </div>
+        <div class="panel_body">
+<div class="list_scroll">
+  <div class="list_table" style="--cols:70px 1fr 100px 190px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title">序號</div>
+      <div class="list_cell tb_list_title">名稱</div>
+      <div class="list_cell tb_list_title">上下架</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    foreach ($billboardList as $list_info) {
+      $no_js   = h(json_encode((string)$list_info['no']));
+      $name_js = h(json_encode((string)$list_info['name']));
+      $link    = safeUrl($list_info['web_url']);
+      $ishow   = isset($billboard_ishow[$list_info['ishow']]) ? $billboard_ishow[$list_info['ishow']] : '';
+    ?>
+    <div class="list_row">
+      <div class="list_cell text_1"><?php echo h($list_info['no']); ?></div>
+      <div class="list_cell text_1"><?php echo h($list_info['name']); ?>
+        <?php if ($link !== '') { ?>
+        <input type="button" class="btn_text" value="連結" onClick="window.open(<?php echo h(json_encode($link)); ?>, '_blank');" />
+        <?php } ?>
+      </div>
+      <div class="list_cell text_1"><?php echo h($ishow); ?></div>
+      <div class="list_cell text_1">
+        <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $no_js; ?>)" />
+        <?php if ($list_info['del_sw'] == '0') { ?>
+        <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $no_js; ?>, <?php echo $name_js; ?>)" />
+        <?php } ?>
+      </div>
+    </div>
+    <?php } ?>
+    <?php if (empty($billboardList)) { ?>
+    <div class="list_row"><div class="list_cell list_span text_1">目前沒有資料</div></div>
+    <?php } ?>
+  </div>
+</div>
+<div class="page pager"><span class="wd_white_12">
+  <?php echo $billboardClass->showPageMenu($argument); ?>
+</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

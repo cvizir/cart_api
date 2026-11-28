@@ -79,7 +79,8 @@ if ($member_nos) {
 $admin_pv = isset($_SESSION["admin_pv"]) ? $_SESSION["admin_pv"] : '';
 $can_edit = empty($admin_pv_check) || strExist($admin_pv, 'orderlist_et');
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -129,129 +130,107 @@ $can_edit = empty($admin_pv_check) || strExist($admin_pv, 'orderlist_et');
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><div align="center"><br />
-      <br />
-      <table width="95%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="1170"><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td width="25%" class="tb_menu_title">訂單資料</td>
-              <td align="right" class="tb_menu_title"><input name="Submit" type="button" value="新增訂單" onClick="onAdd()" /></td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top"><table width="90%">
-            <tr>
-              <td colspan="3">
-                <form name="form1" method="post" action="excel_tr.php">
-                  訂單匯出：
-                  <select name="sh_state" id="sh_state">
-                    <option value="all" selected="selected">全部</option>
-                    <?php foreach ($order_states as $st) { ?>
-                    <option value="<?php echo h($st); ?>"><?php echo h($st); ?></option>
-                    <?php } ?>
-                  </select>
-                  日期
-                  <input type="text" value="" name="start_time" id="start_time">
-                  <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'start_time'})">&nbsp;~
-                  <input type="text" value="" name="end_time" id="end_time">
-                  <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'end_time'})">
-                  <input type="button" name="button1" id="button1" value="明細匯出" onClick="doExport('order_tr.php')">
-                  <input type="button" name="button2" id="button2" value="彙整匯出" onClick="doExport('excel_tr.php')">
-                </form>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="3" align="left" valign="top">
-                <form name="form3" method="get" action="list.php">
-                  會員編號：W <input name="sh_mem" type="text" value="<?php echo h($sh_mem); ?>"> &nbsp;
-                  模糊搜尋：<input name="sh_txt" type="text" value="<?php echo h($sh_txt); ?>"> &nbsp;
-                  訂單狀態：
-                  <select name="sh_order" id="sh_order">
-                    <option value="">全部</option>
-                    <?php foreach ($order_states as $st) { ?>
-                    <option value="<?php echo h($st); ?>" <?php chkSelected($st, $sh_order); ?>><?php echo h($st); ?></option>
-                    <?php } ?>
-                  </select>
-                  &nbsp;&nbsp;
-                  <input type="submit" value="送出">
-                </form>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="3" align="center" valign="top">
-                <table width="100%" border="1" cellpadding="2" cellspacing="0" bordercolor="#CCCCCC">
-                  <tr>
-                    <td width="131" class="tb_list_title">訂單日期</td>
-                    <td width="76" class="tb_list_title">訂單編號</td>
-                    <td width="138" class="tb_list_title">購買人</td>
-                    <td width="70" class="tb_list_title">付款方式</td>
-                    <td width="66" class="tb_list_title">訂單金額</td>
-                    <td width="90" class="tb_list_title">收件人</td>
-                    <td width="76" class="tb_list_title">匯款號碼</td>
-                    <td width="110" class="tb_list_title">出貨單號</td>
-                    <td width="110" class="tb_list_title">訂單狀態</td>
-                    <td width="72" class="tb_list_title">編輯</td>
-                  </tr>
-                  <?php
-                  foreach ($orderlistList as $orderlist) {
-                    $row_member = isset($members[$orderlist['member_no']]) ? $members[$orderlist['member_no']] : array();
-                    $lv_code    = isset($row_member['mem_lv']) ? $row_member['mem_lv'] : '';
-                    $lv_name    = isset($mem_lv_array[$lv_code]) ? $mem_lv_array[$lv_code] : $lv_code;
-                    $spc        = isset($row_member['spc_discount']) ? $row_member['spc_discount'] : '';
-                    $pay_name   = isset($pay_mode_array[$orderlist['pay_mode']]) ? $pay_mode_array[$orderlist['pay_mode']] : $orderlist['pay_mode'];
-                    $order_url  = 'https://shopping.windmill.com.tw/email_order.php?order_code=' . urlencode($orderlist['order_code']) . '&member_code=' . urlencode($orderlist['member_code']);
-                    $no_js      = h(json_encode((string)$orderlist['no']));
-                    $code_js    = h(json_encode((string)$orderlist['order_code']));
-                  ?>
-                  <tr>
-                    <td class="tb_list_info">
-                      <a href="order_tr.php?no=<?php echo urlencode($orderlist['no']); ?>" target="_blank"><?php echo ($orderlist['buytime'] != "") ? h($orderlist['buytime']) : "&nbsp;"; ?></a>
-                    </td>
-                    <td align="left" class="tb_list_info" style="text-align:left;">
-                      <a href="<?php echo h($order_url); ?>" target="_blank"><?php echo 'C17' . sprintf("%06d", $orderlist['no']); ?></a>
-                    </td>
-                    <td align="left" class="tb_list_info" style="text-align:left;"><?php echo h($lv_name); ?>-W<?php echo h($orderlist['member_no']); ?><?php echo h($spc); ?></td>
-                    <td align="left" class="tb_list_info" style="text-align:left;"><?php echo h($pay_name); ?></td>
-                    <td align="right" class="tb_list_info" style="text-align:right;"><?php echo h($orderlist['total_amount']); ?>&nbsp;</td>
-                    <td align="left" class="tb_list_info" style="text-align:left;"><?php echo h($orderlist['invoice_name']); ?></td>
-                    <td align="left" class="tb_list_info"><?php echo h($orderlist['atm_num']); ?></td>
-                    <td align="left" class="tb_list_info" style="text-align:left;"><?php echo h($orderlist['post_num']); ?></td>
-                    <td align="left" class="tb_list_info" style="text-align:left;">
-                      <select onChange="chang_state(<?php echo $no_js; ?>, <?php echo $code_js; ?>, this.value, this)">
-                        <?php foreach ($order_states as $st) { ?>
-                        <option value="<?php echo h($st); ?>" <?php chkSelected($st, $orderlist['order_state']); ?>><?php echo h($st); ?></option>
-                        <?php } ?>
-                      </select>
-                    </td>
-                    <td class="tb_list_info"><input type="button" value="編輯訂單" onClick="onEdit(<?php echo $no_js; ?>)" /></td>
-                  </tr>
-                  <?php } ?>
-                  <?php if (empty($orderlistList)) { ?>
-                  <tr><td colspan="10" class="tb_list_info">沒有符合的訂單</td></tr>
-                  <?php } ?>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="2" align="center" class="page"><span class="wd_white_12">
-                <?php echo $orderlistClass->showPageMenu($argument); ?>
-              </span></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </div></td>
-  </tr>
-</table>
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_xl">
+        <div class="panel_head tb_menu_title">
+          <div>訂單資料</div>
+          <div><input name="Submit" type="button" value="新增訂單" onClick="onAdd()" /></div>
+        </div>
+        <div class="panel_body">
+<div class="filter_bar">
+  <form name="form1" method="post" action="excel_tr.php">
+    訂單匯出：
+    <select name="sh_state" id="sh_state">
+      <option value="all" selected="selected">全部</option>
+      <?php foreach ($order_states as $st) { ?>
+      <option value="<?php echo h($st); ?>"><?php echo h($st); ?></option>
+      <?php } ?>
+    </select>
+    日期
+    <input type="text" value="" name="start_time" id="start_time">
+    <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" class="date_icon" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'start_time'})">&nbsp;~
+    <input type="text" value="" name="end_time" id="end_time">
+    <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" class="date_icon" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'end_time'})">
+    <input type="button" name="button1" id="button1" value="明細匯出" onClick="doExport('order_tr.php')">
+    <input type="button" name="button2" id="button2" value="彙整匯出" onClick="doExport('excel_tr.php')">
+  </form>
+</div>
+<div class="filter_bar">
+  <form name="form3" method="get" action="list.php">
+    會員編號：W <input name="sh_mem" type="text" value="<?php echo h($sh_mem); ?>"> &nbsp;
+    模糊搜尋：<input name="sh_txt" type="text" value="<?php echo h($sh_txt); ?>"> &nbsp;
+    訂單狀態：
+    <select name="sh_order" id="sh_order">
+      <option value="">全部</option>
+      <?php foreach ($order_states as $st) { ?>
+      <option value="<?php echo h($st); ?>" <?php chkSelected($st, $sh_order); ?>><?php echo h($st); ?></option>
+      <?php } ?>
+    </select>
+    &nbsp;&nbsp;
+    <input type="submit" value="送出">
+  </form>
+</div>
+<div class="list_scroll">
+  <div class="list_table" style="--cols:135px 95px 1fr 90px 80px 100px 100px 120px 135px 95px;min-width:1100px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title">訂單日期</div>
+      <div class="list_cell tb_list_title">訂單編號</div>
+      <div class="list_cell tb_list_title">購買人</div>
+      <div class="list_cell tb_list_title">付款方式</div>
+      <div class="list_cell tb_list_title">訂單金額</div>
+      <div class="list_cell tb_list_title">收件人</div>
+      <div class="list_cell tb_list_title">匯款號碼</div>
+      <div class="list_cell tb_list_title">出貨單號</div>
+      <div class="list_cell tb_list_title">訂單狀態</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    foreach ($orderlistList as $orderlist) {
+      $row_member = isset($members[$orderlist['member_no']]) ? $members[$orderlist['member_no']] : array();
+      $lv_code    = isset($row_member['mem_lv']) ? $row_member['mem_lv'] : '';
+      $lv_name    = isset($mem_lv_array[$lv_code]) ? $mem_lv_array[$lv_code] : $lv_code;
+      $spc        = isset($row_member['spc_discount']) ? $row_member['spc_discount'] : '';
+      $pay_name   = isset($pay_mode_array[$orderlist['pay_mode']]) ? $pay_mode_array[$orderlist['pay_mode']] : $orderlist['pay_mode'];
+      $order_url  = 'https://shopping.windmill.com.tw/email_order.php?order_code=' . urlencode($orderlist['order_code']) . '&member_code=' . urlencode($orderlist['member_code']);
+      $no_js      = h(json_encode((string)$orderlist['no']));
+      $code_js    = h(json_encode((string)$orderlist['order_code']));
+    ?>
+    <div class="list_row">
+      <div class="list_cell tb_list_info"><a href="order_tr.php?no=<?php echo urlencode($orderlist['no']); ?>" target="_blank"><?php echo ($orderlist['buytime'] != "") ? h($orderlist['buytime']) : "&nbsp;"; ?></a></div>
+      <div class="list_cell tb_list_info al_left"><a href="<?php echo h($order_url); ?>" target="_blank"><?php echo 'C17' . sprintf("%06d", $orderlist['no']); ?></a></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($lv_name); ?>-W<?php echo h($orderlist['member_no']); ?><?php echo h($spc); ?></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($pay_name); ?></div>
+      <div class="list_cell tb_list_info al_right"><?php echo h($orderlist['total_amount']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($orderlist['invoice_name']); ?></div>
+      <div class="list_cell tb_list_info"><?php echo h($orderlist['atm_num']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($orderlist['post_num']); ?></div>
+      <div class="list_cell tb_list_info al_left">
+        <select onChange="chang_state(<?php echo $no_js; ?>, <?php echo $code_js; ?>, this.value, this)">
+          <?php foreach ($order_states as $st) { ?>
+          <option value="<?php echo h($st); ?>" <?php chkSelected($st, $orderlist['order_state']); ?>><?php echo h($st); ?></option>
+          <?php } ?>
+        </select>
+      </div>
+      <div class="list_cell tb_list_info"><input type="button" value="編輯訂單" onClick="onEdit(<?php echo $no_js; ?>)" /></div>
+    </div>
+    <?php } ?>
+    <?php if (empty($orderlistList)) { ?>
+    <div class="list_row"><div class="list_cell list_span tb_list_info">沒有符合的訂單</div></div>
+    <?php } ?>
+  </div>
+</div>
+<div class="page pager"><span class="wd_white_12">
+  <?php echo $orderlistClass->showPageMenu($argument); ?>
+</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

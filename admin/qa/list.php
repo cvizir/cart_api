@@ -25,7 +25,8 @@ $total   = $result['total'];
 // 編輯 / 刪除 / 新增時帶給 save.php 的參數
 $sh_post = "&page=" . $page . "&pagesize=" . $pagesize . "&total=" . $total . $argument;
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -48,73 +49,55 @@ $sh_post = "&page=" . $page . "&pagesize=" . $pagesize . "&total=" . $total . $a
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top">
-      <br />
-      <table width="724" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="716">
-            <table width="100%" border="0" cellspacing="0" cellpadding="4">
-              <tr>
-                <td class="tb_menu_title">Q&amp;A管理</td>
-                <td class="tb_menu_title" align="right"><input name="Submit" type="button" value="新增問題" onClick="onAdd()" /></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top">
-            <table width="93%">
-              <tr>
-                <td align="center" valign="top">
-                  <table width="692" border="1" cellpadding="2" cellspacing="0" bordercolor="#CCCCCC">
-                    <tr>
-                      <td width="94" height="28" align="center" class="tb_list_title">序號</td>
-                      <td width="307" align="center" class="tb_list_title">問題</td>
-                      <td width="112" align="center" class="tb_list_title">上下架</td>
-                      <td width="153" align="center" class="tb_list_title">編輯</td>
-                    </tr>
-                    <?php
-                    $no = ($page - 1) * $pagesize;
-                    foreach ($qaList as $list_info) {
-                      $no++;
-                      $code_js = h(json_encode((string)$list_info['qa_code']));
-                      $name_js = h(json_encode((string)$list_info['question']));
-                    ?>
-                    <tr>
-                      <td align="center" class="tb_list_info"><?php echo $no; ?></td>
-                      <td align="center" class="tb_list_info"><?php echo h($list_info['question']); ?>&nbsp;</td>
-                      <td align="center" class="tb_list_info"><?php echo getIshow($list_info['ishow']); ?></td>
-                      <td align="center" class="tb_list_info">
-                        <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $code_js; ?>)" />
-                        <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $code_js; ?>, <?php echo $name_js; ?>)" />
-                      </td>
-                    </tr>
-                    <?php } ?>
-                    <?php if (empty($qaList)) { ?>
-                    <tr><td colspan="4" align="center" class="tb_list_info">目前沒有資料</td></tr>
-                    <?php } ?>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td height="20" align="center" class="page"><span class="wd_white_12">
-                  <?php echo $qaClass->showPageMenu($argument); ?>
-                </span></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-      <br />
-    </td>
-  </tr>
-</table>
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_sm">
+        <div class="panel_head tb_menu_title">
+          <div>Q&amp;A管理</div>
+          <div><input name="Submit" type="button" value="新增問題" onClick="onAdd()" /></div>
+        </div>
+        <div class="panel_body">
+<div class="list_scroll">
+  <div class="list_table" style="--cols:70px 1fr 100px 190px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title">序號</div>
+      <div class="list_cell tb_list_title">問題</div>
+      <div class="list_cell tb_list_title">上下架</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    $no = ($page - 1) * $pagesize;
+    foreach ($qaList as $list_info) {
+      $no++;
+      $code_js = h(json_encode((string)$list_info['qa_code']));
+      $name_js = h(json_encode((string)$list_info['question']));
+    ?>
+    <div class="list_row">
+      <div class="list_cell tb_list_info"><?php echo $no; ?></div>
+      <div class="list_cell tb_list_info"><?php echo h($list_info['question']); ?></div>
+      <div class="list_cell tb_list_info"><?php echo getIshow($list_info['ishow']); ?></div>
+      <div class="list_cell tb_list_info">
+        <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $code_js; ?>)" />
+        <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $code_js; ?>, <?php echo $name_js; ?>)" />
+      </div>
+    </div>
+    <?php } ?>
+    <?php if (empty($qaList)) { ?>
+    <div class="list_row"><div class="list_cell list_span tb_list_info">目前沒有資料</div></div>
+    <?php } ?>
+  </div>
+</div>
+<div class="page pager"><span class="wd_white_12">
+  <?php echo $qaClass->showPageMenu($argument); ?>
+</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

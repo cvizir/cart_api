@@ -18,52 +18,33 @@ if (!empty($_SESSION['admin_id'])) {
 $csrf = adminCsrfToken();
 header("Content-Type: text/html; charset=utf-8");
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><?php echo h(ADMIN_TITLE); ?></title>
 <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-  <table width="100%" border="0" cellpadding="0" cellspacing="0">
-    <tr>
-      <td height="26" bgcolor="#666666">
-        <table width="940" border="0" align="center" cellpadding="0" cellspacing="0">
-          <tr>
-            <td width="115" height="26">&nbsp;</td>
-            <td>&nbsp;</td>
-          </tr>
-        </table>
-        <!--header end-->
-      </td>
-    </tr>
-    <tr>
-      <td height="280" background="images/index_board_bg.jpg">
-        <form id="form1" name="form1" method="post" action="login.php" autocomplete="off">
-          <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>" />
-          <table border="0" align="center" cellpadding="5" cellspacing="0">
-            <tr>
-              <td height="40" colspan="2" align="center" class="index_title"><?php echo h(ADMIN_TITLE); ?></td>
-            </tr>
-            <tr>
-              <td align="right" class="index_input_text">ID：</td>
-              <td><input name="admin_id" type="text" id="admin_id" style="width:180px" /></td>
-            </tr>
-            <tr>
-              <td align="right" class="index_input_text">PASSWORD：</td>
-              <td><input name="admin_psw" type="password" id="admin_psw" style="width:180px" /></td>
-            </tr>
-            <tr>
-              <td colspan="2" align="right">
-                <hr size="1" noshade="noshade" />
-                <input name="Submit" type="submit" class="form_button" value="LOGIN" />
-              </td>
-            </tr>
-          </table>
-        </form>
-      </td>
-    </tr>
-  </table>
+  <div class="login_topbar"></div>
+  <div class="login_board">
+    <form id="form1" name="form1" method="post" action="login.php" autocomplete="off" class="login_form">
+      <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>" />
+      <div class="index_title"><?php echo h(ADMIN_TITLE); ?></div>
+      <div class="login_row">
+        <label for="admin_id" class="index_input_text">ID：</label>
+        <input name="admin_id" type="text" id="admin_id" />
+      </div>
+      <div class="login_row">
+        <label for="admin_psw" class="index_input_text">PASSWORD：</label>
+        <input name="admin_psw" type="password" id="admin_psw" />
+      </div>
+      <hr />
+      <div class="login_actions">
+        <input name="Submit" type="submit" class="form_button" value="LOGIN" />
+      </div>
+    </form>
+  </div>
 </body>
 </html>

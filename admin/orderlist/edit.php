@@ -330,7 +330,8 @@ $lv_code = isset($row_member['mem_lv']) ? $row_member['mem_lv'] : '';
 $lv_name = isset($mem_lv_array[$lv_code]) ? $mem_lv_array[$lv_code] : $lv_code;
 $mem_name = isset($row_member['name']) ? $row_member['name'] : '';
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -369,279 +370,236 @@ $mem_name = isset($row_member['name']) ? $row_member['name'] : '';
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" bgcolor="#525252" valign="top"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><br />
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_lg">
+        <div class="panel_head tb_menu_title">
+          <div>訂單資料</div>
+          <div><input name="Submit" type="button" value="回上一頁" onClick="window.history.go(-1);" /></div>
+        </div>
+        <div class="panel_body">
+<form name="form1" method="post" action="" class="fee_form">
+  <?php if ($tr_msg !== '') { ?>
+  <div class="fee_msg"><?php echo h($tr_msg); ?></div>
+  <?php } ?>
+  <div class="fee_row">
+    <div>國外運費&nbsp;:&nbsp;<input type="text" name="tr_money" id="tr_money"></div>
+    <div>備註&nbsp;:&nbsp;<input type="text" name="tr_ps" id="tr_ps"></div>
+    <div>
+      <input type="submit" name="button2" id="button2" value="運費送出">
+      <input name="m_action" type="hidden" value="add_tr">
+      <input name="add_order_code" type="hidden" value="<?php echo h($orderlist['order_code']); ?>">
+    </div>
+  </div>
+  <div class="fee_row">
+    <div>其他費用&nbsp;:&nbsp;<input type="text" name="ot_money" id="ot_money"></div>
+    <div>備註&nbsp;:&nbsp;<input type="text" name="ot_ps" id="ot_ps"></div>
+    <div>&nbsp;</div>
+  </div>
+</form>
+<form action="save.php?<?php echo h($sh_post); ?>" method="post" id="form2" name="CodeForm" onSubmit="return validator(this)">
+  <div class="edit_table" style="width:100%;--lw:150px;">
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單狀態</div>
+  <div class="edit_info"><div class="state_bar">
+      <select name="order_state" id="order_state">
+        <?php foreach ($order_states as $st) { ?>
+        <option value="<?php echo h($st); ?>" <?php chkSelected($st, $orderlist['order_state']); ?>><?php echo h($st); ?></option>
+        <?php } ?>
+      </select>
+      <?php if ($orderlist['no'] !== '') { ?>
+      <input name="Submit5" type="button" value="重寄Email訂單" onClick="resend(<?php echo h(json_encode((string)$orderlist['no'])); ?>, <?php echo h(json_encode((string)$orderlist['order_code'])); ?>, <?php echo h(json_encode((string)$orderlist['member_code'])); ?>)" />
+      <?php } ?>
+      <div class="state_submit">
+        <input type="hidden" value="<?php echo h($orderlist['no']); ?>" name="no" id="no" />
+        <input type="hidden" value="<?php echo h($orderlist['order_code']); ?>" name="order_code" id="order_code" />
+        <?php if ($can_edit) { ?>
+        <input type="submit" name="button" id="button" value="<?php echo ($cms_mode == 'add') ? '新增資料' : '修改資料'; ?>">
+        <?php } ?>
+      </div>
+    </div></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">修改日期</div>
+  <div class="edit_info"><?php echo h($orderlist['uptime']); ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單日期</div>
+  <div class="edit_info"><?php echo h($orderlist['buytime']); ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單編號</div>
+  <div class="edit_info"><?php if ($orderlist['no'] !== '') { echo 'C17' . sprintf("%06d", $orderlist['no']); } ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單編碼</div>
+  <div class="edit_info"><?php echo h($orderlist['order_code']); ?>
+    <?php if ($orderlist['order_code'] !== '') { ?>
+    &nbsp;<a href="https://shopping.windmill.com.tw/email_order-T.php?order_code=<?php echo urlencode($orderlist['order_code']); ?>" target="_blank">訂單連結</a>
+    <?php } ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">LINE PAY訂單編碼</div>
+  <div class="edit_info"><?php echo h($orderlist['transaction_Id']); ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">物流公司</div>
+  <div class="edit_info"><?php foreach (array('新竹物流', '郵政物流', '順豐快遞', '通盈通運', '海外船運') as $cpy) { ?>
+    <label><?php echo h($cpy); ?><input type="radio" value="<?php echo h($cpy); ?>" name="post_cpy" <?php chkChecked($cpy, $orderlist['post_cpy']); ?>></label>&nbsp;&nbsp;&nbsp;
+    <?php } ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">預購寄送日期</div>
+  <div class="edit_info"><input type="text" value="<?php echo h($orderlist['pre_post_date']); ?>" name="pre_post_date" id="pre_post_date">
+    <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" class="date_icon" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'pre_post_date'})"></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">寄送日期</div>
+  <div class="edit_info"><input type="text" value="<?php echo h($orderlist['post_date']); ?>" name="post_date" id="post_date">
+    <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" class="date_icon" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'post_date'})"></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">寄送貨號</div>
+  <div class="edit_info"><input name="post_num" type="text" id="post_num" value="<?php echo h($orderlist['post_num']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單備註<br>(管理員填寫)</div>
+  <div class="edit_info"><textarea name="order_ps" id="order_ps" cols="45" rows="5"><?php echo h($orderlist['order_ps']); ?></textarea></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">匯款號碼</div>
+  <div class="edit_info"><input name="atm_num" type="text" id="atm_num" value="<?php echo h($orderlist['atm_num']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">超商代碼</div>
+  <div class="edit_info"><input name="store_num" type="text" id="store_num" value="<?php echo h($orderlist['store_num']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">會員編號</div>
+  <div class="edit_info"><input name="member_no" type="text" id="member_no" value="<?php echo h($orderlist['member_no']); ?>" size="30" readonly />
+    <?php echo h($lv_name); ?>-<?php echo h($mem_name); ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">會員代碼</div>
+  <div class="edit_info"><input name="member_code" type="text" id="member_code" value="<?php echo h($orderlist['member_code']); ?>" size="30" readonly /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">收件人姓名</div>
+  <div class="edit_info"><input name="invoice_name" type="text" id="invoice_name" value="<?php echo h($orderlist['invoice_name']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">收件人電話</div>
+  <div class="edit_info"><input name="invoice_tel" type="text" id="invoice_tel" value="<?php echo h($orderlist['invoice_tel']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單信箱</div>
+  <div class="edit_info"><input name="invoice_email" type="text" id="invoice_email" value="<?php echo h($orderlist['invoice_email']); ?>" size="30" readonly /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">收件人地址</div>
+  <div class="edit_info"><span class="accInfMainContentForm">
+      <select name="invoice_country" id="invoice_country" class="accInfAddWh">
+        <option value="">請選擇</option>
+        <?php foreach ($country_options as $val => $label) { ?>
+        <option value="<?php echo h($val); ?>" <?php chkSelected($val, $orderlist['invoice_country']); ?>><?php echo h($label); ?></option>
+        <?php } ?>
+      </select>
+      <input name="invoice_zipcode" class="accInfFormZip" id="invoice_zipcode" size="4" value="<?php echo h($orderlist['invoice_zipcode']); ?>" />
+    </span>
+    <select name="invoice_city" id="invoice_city" class="accInfAddWh" onChange="addOption_list(this.options[this.options.selectedIndex].text,'invoice_area','1','invoice_zipcode');">
+      <option value="" selected="selected">請選擇</option>
+      <?php foreach ($city_options as $city) { ?>
+      <option value="<?php echo h($city); ?>"><?php echo h($city); ?></option>
+      <?php } ?>
+    </select>
+    <select name="invoice_area" id="invoice_area" class="accInfAddWh" onChange="changZipcode('invoice_zipcode',this.options[this.options.selectedIndex].value,this.options[this.options.selectedIndex].text)">
+      <option value="1" selected="selected">請選擇</option>
+    </select>
+    <span class="accInfMainContentForm">
+      <script language="JavaScript" type="text/javascript">
+        // 預設值填入：addOption_list(城市名稱, 地區欄位名稱, 地區預設值, 郵遞區號欄位名稱)
+        addOption_list(<?php echo json_encode((string)$city_def); ?>, 'invoice_area', <?php echo json_encode((string)$area_def); ?>, 'invoice_zipcode');
+        // citySelect(城市欄位名稱, 城市預設值)
+        citySelect('invoice_city', <?php echo json_encode((string)$city_def); ?>);
+      </script>
       <br />
-      <table width="845" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td class="tb_menu_title">訂單資料</td>
-              <td align="right" class="tb_menu_title"><input name="Submit" type="button" value="回上一頁" onClick="window.history.go(-1);" /></td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top"><table width="100%">
-            <tr>
-              <td>
-                <form name="form1" method="post" action="">
-                  <br>
-                  <table width="90%" style="font-size:16px;" border="0" align="center" cellpadding="0" cellspacing="0">
-                    <?php if ($tr_msg !== '') { ?>
-                    <tr><td colspan="3" style="color:#d00;"><?php echo h($tr_msg); ?></td></tr>
-                    <?php } ?>
-                    <tr>
-                      <td width="39%" align="left">國外運費&nbsp;:&nbsp;<input type="text" name="tr_money" id="tr_money"></td>
-                      <td width="34%" align="left">備註&nbsp;:&nbsp;<input type="text" name="tr_ps" id="tr_ps"></td>
-                      <td width="27%" align="left">
-                        <input type="submit" name="button2" id="button2" value="運費送出">
-                        <input name="m_action" type="hidden" value="add_tr">
-                        <input name="add_order_code" type="hidden" value="<?php echo h($orderlist['order_code']); ?>">
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="left">其他費用&nbsp;:&nbsp;<input type="text" name="ot_money" id="ot_money"></td>
-                      <td align="left">備註&nbsp;:&nbsp;<input type="text" name="ot_ps" id="ot_ps"></td>
-                      <td align="left">&nbsp;</td>
-                    </tr>
-                  </table>
-                </form>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" valign="top">
-                <form action="save.php?<?php echo h($sh_post); ?>" method="post" id="form2" name="CodeForm" onSubmit="return validator(this)">
-                  <table width="770" border="1" cellpadding="4" cellspacing="0" bordercolor="#CCCCCC">
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">訂單狀態</td>
-                      <td width="109">
-                        <select name="order_state" id="order_state">
-                          <?php foreach ($order_states as $st) { ?>
-                          <option value="<?php echo h($st); ?>" <?php chkSelected($st, $orderlist['order_state']); ?>><?php echo h($st); ?></option>
-                          <?php } ?>
-                        </select>
-                      </td>
-                      <td width="136" align="center">
-                        <?php if ($orderlist['no'] !== '') { ?>
-                        <input name="Submit5" type="button" value="重寄Email訂單" onClick="resend(<?php echo h(json_encode((string)$orderlist['no'])); ?>, <?php echo h(json_encode((string)$orderlist['order_code'])); ?>, <?php echo h(json_encode((string)$orderlist['member_code'])); ?>)" />
-                        <?php } ?>
-                      </td>
-                      <td width="389" align="right">
-                        <input type="hidden" value="<?php echo h($orderlist['no']); ?>" name="no" id="no" />
-                        <input type="hidden" value="<?php echo h($orderlist['order_code']); ?>" name="order_code" id="order_code" />
-                        <?php if ($can_edit) { ?>
-                        <input type="submit" name="button" id="button" value="<?php echo ($cms_mode == 'add') ? '新增資料' : '修改資料'; ?>">
-                        <?php } ?>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">修改日期</td>
-                      <td colspan="3"><?php echo h($orderlist['uptime']); ?>&nbsp;</td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">訂單日期</td>
-                      <td colspan="3"><?php echo h($orderlist['buytime']); ?></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">訂單編號</td>
-                      <td colspan="3"><?php if ($orderlist['no'] !== '') { echo 'C17' . sprintf("%06d", $orderlist['no']); } ?></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">訂單編碼</td>
-                      <td colspan="3">
-                        <?php echo h($orderlist['order_code']); ?>
-                        <?php if ($orderlist['order_code'] !== '') { ?>
-                        &nbsp;<a href="https://shopping.windmill.com.tw/email_order-T.php?order_code=<?php echo urlencode($orderlist['order_code']); ?>" target="_blank">訂單連結</a>
-                        <?php } ?>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">LINE PAY訂單編碼</td>
-                      <td colspan="3"><?php echo h($orderlist['transaction_Id']); ?></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">物流公司</td>
-                      <td colspan="3">
-                        <?php foreach (array('新竹物流', '郵政物流', '順豐快遞', '通盈通運', '海外船運') as $cpy) { ?>
-                        <label><?php echo h($cpy); ?><input type="radio" value="<?php echo h($cpy); ?>" name="post_cpy" <?php chkChecked($cpy, $orderlist['post_cpy']); ?>></label>&nbsp;&nbsp;&nbsp;
-                        <?php } ?>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">預購寄送日期</td>
-                      <td colspan="3">
-                        <input type="text" value="<?php echo h($orderlist['pre_post_date']); ?>" name="pre_post_date" id="pre_post_date">
-                        <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'pre_post_date'})">
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">寄送日期</td>
-                      <td colspan="3">
-                        <input type="text" value="<?php echo h($orderlist['post_date']); ?>" name="post_date" id="post_date">
-                        <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" align="absmiddle" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',el:'post_date'})">
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">寄送貨號</td>
-                      <td colspan="3"><input name="post_num" type="text" id="post_num" value="<?php echo h($orderlist['post_num']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td align="center" valign="middle" class="tb_edit_title">訂單備註<br>(管理員填寫)<br></td>
-                      <td colspan="3"><textarea name="order_ps" id="order_ps" cols="45" rows="5"><?php echo h($orderlist['order_ps']); ?></textarea></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">匯款號碼</td>
-                      <td colspan="3"><input name="atm_num" type="text" id="atm_num" value="<?php echo h($orderlist['atm_num']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">超商代碼</td>
-                      <td colspan="3"><input name="store_num" type="text" id="store_num" value="<?php echo h($orderlist['store_num']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td width="94" align="center" class="tb_edit_title">會員編號</td>
-                      <td colspan="3">
-                        <input name="member_no" type="text" id="member_no" value="<?php echo h($orderlist['member_no']); ?>" size="30" readonly />
-                        <?php echo h($lv_name); ?>-<?php echo h($mem_name); ?>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">會員代碼</td>
-                      <td colspan="3"><input name="member_code" type="text" id="member_code" value="<?php echo h($orderlist['member_code']); ?>" size="30" readonly /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">收件人姓名</td>
-                      <td height="30" colspan="3"><input name="invoice_name" type="text" id="invoice_name" value="<?php echo h($orderlist['invoice_name']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">收件人電話</td>
-                      <td height="30" colspan="3"><input name="invoice_tel" type="text" id="invoice_tel" value="<?php echo h($orderlist['invoice_tel']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">訂單信箱</td>
-                      <td height="30" colspan="3"><input name="invoice_email" type="text" id="invoice_email" value="<?php echo h($orderlist['invoice_email']); ?>" size="30" readonly /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">收件人地址</td>
-                      <td height="30" colspan="3">
-                        <span class="accInfMainContentForm">
-                          <select name="invoice_country" id="invoice_country" class="accInfAddWh">
-                            <option value="">請選擇</option>
-                            <?php foreach ($country_options as $val => $label) { ?>
-                            <option value="<?php echo h($val); ?>" <?php chkSelected($val, $orderlist['invoice_country']); ?>><?php echo h($label); ?></option>
-                            <?php } ?>
-                          </select>
-                          <input name="invoice_zipcode" class="accInfFormZip" id="invoice_zipcode" size="4" value="<?php echo h($orderlist['invoice_zipcode']); ?>" />
-                        </span>
-                        <select name="invoice_city" id="invoice_city" class="accInfAddWh" onChange="addOption_list(this.options[this.options.selectedIndex].text,'invoice_area','1','invoice_zipcode');">
-                          <option value="" selected="selected">請選擇</option>
-                          <?php foreach ($city_options as $city) { ?>
-                          <option value="<?php echo h($city); ?>"><?php echo h($city); ?></option>
-                          <?php } ?>
-                        </select>
-                        <select name="invoice_area" id="invoice_area" class="accInfAddWh" onChange="changZipcode('invoice_zipcode',this.options[this.options.selectedIndex].value,this.options[this.options.selectedIndex].text)">
-                          <option value="1" selected="selected">請選擇</option>
-                        </select>
-                        <span class="accInfMainContentForm">
-                          <script language="JavaScript" type="text/javascript">
-                            // 預設值填入：addOption_list(城市名稱, 地區欄位名稱, 地區預設值, 郵遞區號欄位名稱)
-                            addOption_list(<?php echo json_encode((string)$city_def); ?>, 'invoice_area', <?php echo json_encode((string)$area_def); ?>, 'invoice_zipcode');
-                            // citySelect(城市欄位名稱, 城市預設值)
-                            citySelect('invoice_city', <?php echo json_encode((string)$city_def); ?>);
-                          </script>
-                          <br />
-                          <input name="invoice_addr" type="text" id="invoice_addr" class="accInfFormWh" value="<?php echo h($orderlist['invoice_addr']); ?>" size="40" />
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="tb_edit_title">付款方式</td>
-                      <td colspan="3" class="tb_edit_info">
-                        <?php
-                        $pay_modes = array('card' => '信用卡', 'atm' => 'ATM轉帳', 'store_pay' => '超商付款',
-                                           'line_pay' => 'Line Pay付款', 'post' => '郵政劃撥', 'foreign' => '國外訂購');
-                        foreach ($pay_modes as $val => $label) { ?>
-                        <label><?php echo h($label); ?><input type="radio" value="<?php echo h($val); ?>" name="pay_mode" <?php chkChecked($val, $orderlist['pay_mode']); ?>></label>&nbsp;&nbsp;&nbsp;
-                        <?php } ?>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="tb_edit_title">配送方式</td>
-                      <td colspan="3" class="tb_edit_info">
-                        <label>宅配<input type="radio" value="post" name="get_mode" <?php chkChecked('post', $orderlist['get_mode']); ?>></label>&nbsp;&nbsp;&nbsp;
-                        <label>超商取貨<input type="radio" value="store" name="get_mode" <?php chkChecked('store', $orderlist['get_mode']); ?>></label>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="tb_edit_title">發票</td>
-                      <td colspan="3" class="tb_edit_info">
-                        <label>二聯<input type="radio" value="2" name="invoice_type" <?php chkChecked('2', $orderlist['invoice_type']); ?>></label>&nbsp;&nbsp;&nbsp;
-                        <label>三聯<input type="radio" value="3" name="invoice_type" <?php chkChecked('3', $orderlist['invoice_type']); ?>></label>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">公司抬頭</td>
-                      <td height="30" colspan="3"><input name="invoice_title" type="text" id="invoice_title" value="<?php echo h($orderlist['invoice_title']); ?>" size="30" readonly /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">統一編號</td>
-                      <td height="30" colspan="3"><input name="invoice_num" type="text" id="invoice_num" value="<?php echo h($orderlist['invoice_num']); ?>" size="30" readonly /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">商品小計</td>
-                      <td height="30" colspan="3"><input name="amount" type="text" id="amount" value="<?php echo h($orderlist['amount']); ?>" size="30" readonly /></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">運費</td>
-                      <td colspan="3"><input name="transportation" type="text" id="transportation" value="<?php echo h($orderlist['transportation']); ?>" size="30" readonly /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">運費備註</td>
-                      <td height="30" colspan="3"><input name="transportation_ps" type="text" id="transportation_ps" value="<?php echo h($orderlist['transportation_ps']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">超商付款手續費</td>
-                      <td colspan="3"><input name="pay_mode_price" type="text" id="pay_mode_price" value="<?php echo h($orderlist['pay_mode_price']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">其他費用</td>
-                      <td colspan="3"><input name="other_price" type="text" id="other_price" value="<?php echo h($orderlist['other_price']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">其他費用備註</td>
-                      <td height="30" colspan="3"><input name="other_ps" type="text" id="other_ps" value="<?php echo h($orderlist['other_ps']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td height="30" align="center" class="tb_edit_title">訂單金額</td>
-                      <td height="30" colspan="3"><input name="total_amount" type="text" id="total_amount" value="<?php echo h($orderlist['total_amount']); ?>" size="30" /></td>
-                    </tr>
-                    <tr>
-                      <td align="center" valign="middle" class="tb_edit_title">訂單備註<br>(客戶填寫)</td>
-                      <td colspan="3"><textarea name="ps" id="ps" cols="45" rows="5"><?php echo h($orderlist['ps']); ?></textarea></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">付款資訊</td>
-                      <td colspan="3">
-                        <textarea name="pay_info" cols="45" rows="5" readonly id="pay_info"><?php echo h($orderlist['pay_info']); ?></textarea>
-                        <input type="hidden" name="order_info" id="order_info" value="<?php echo h($orderlist['order_info']); ?>" />
-                      </td>
-                    </tr>
-                  </table>
-                </form>
-              </td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </td>
-  </tr>
-</table>
+      <input name="invoice_addr" type="text" id="invoice_addr" class="accInfFormWh" value="<?php echo h($orderlist['invoice_addr']); ?>" size="40" />
+    </span></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">付款方式</div>
+  <div class="edit_info tb_edit_info"><?php
+    $pay_modes = array('card' => '信用卡', 'atm' => 'ATM轉帳', 'store_pay' => '超商付款',
+                       'line_pay' => 'Line Pay付款', 'post' => '郵政劃撥', 'foreign' => '國外訂購');
+    foreach ($pay_modes as $val => $label) { ?>
+    <label><?php echo h($label); ?><input type="radio" value="<?php echo h($val); ?>" name="pay_mode" <?php chkChecked($val, $orderlist['pay_mode']); ?>></label>&nbsp;&nbsp;&nbsp;
+    <?php } ?></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">配送方式</div>
+  <div class="edit_info tb_edit_info"><label>宅配<input type="radio" value="post" name="get_mode" <?php chkChecked('post', $orderlist['get_mode']); ?>></label>&nbsp;&nbsp;&nbsp;
+    <label>超商取貨<input type="radio" value="store" name="get_mode" <?php chkChecked('store', $orderlist['get_mode']); ?>></label></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">發票</div>
+  <div class="edit_info tb_edit_info"><label>二聯<input type="radio" value="2" name="invoice_type" <?php chkChecked('2', $orderlist['invoice_type']); ?>></label>&nbsp;&nbsp;&nbsp;
+    <label>三聯<input type="radio" value="3" name="invoice_type" <?php chkChecked('3', $orderlist['invoice_type']); ?>></label></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">公司抬頭</div>
+  <div class="edit_info"><input name="invoice_title" type="text" id="invoice_title" value="<?php echo h($orderlist['invoice_title']); ?>" size="30" readonly /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">統一編號</div>
+  <div class="edit_info"><input name="invoice_num" type="text" id="invoice_num" value="<?php echo h($orderlist['invoice_num']); ?>" size="30" readonly /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">商品小計</div>
+  <div class="edit_info"><input name="amount" type="text" id="amount" value="<?php echo h($orderlist['amount']); ?>" size="30" readonly /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">運費</div>
+  <div class="edit_info"><input name="transportation" type="text" id="transportation" value="<?php echo h($orderlist['transportation']); ?>" size="30" readonly /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">運費備註</div>
+  <div class="edit_info"><input name="transportation_ps" type="text" id="transportation_ps" value="<?php echo h($orderlist['transportation_ps']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">超商付款手續費</div>
+  <div class="edit_info"><input name="pay_mode_price" type="text" id="pay_mode_price" value="<?php echo h($orderlist['pay_mode_price']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">其他費用</div>
+  <div class="edit_info"><input name="other_price" type="text" id="other_price" value="<?php echo h($orderlist['other_price']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">其他費用備註</div>
+  <div class="edit_info"><input name="other_ps" type="text" id="other_ps" value="<?php echo h($orderlist['other_ps']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單金額</div>
+  <div class="edit_info"><input name="total_amount" type="text" id="total_amount" value="<?php echo h($orderlist['total_amount']); ?>" size="30" /></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">訂單備註<br>(客戶填寫)</div>
+  <div class="edit_info"><textarea name="ps" id="ps" cols="45" rows="5"><?php echo h($orderlist['ps']); ?></textarea></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">付款資訊</div>
+  <div class="edit_info"><textarea name="pay_info" cols="45" rows="5" readonly id="pay_info"><?php echo h($orderlist['pay_info']); ?></textarea>
+    <input type="hidden" name="order_info" id="order_info" value="<?php echo h($orderlist['order_info']); ?>" /></div>
+</div>
+  </div>
+</form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

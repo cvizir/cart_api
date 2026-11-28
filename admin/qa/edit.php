@@ -29,7 +29,8 @@ if ($qa_code !== '') {
 }
 $sort_end = max(99, (int)$qa['m_sort']);
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -47,92 +48,61 @@ $sort_end = max(99, (int)$qa['m_sort']);
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" bgcolor="#525252" valign="top"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top">
-      <div align="center"><br />
-        <br />
-        <table width="800" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-          <tr>
-            <td width="100%">
-              <table width="100%" border="0" cellspacing="0" cellpadding="4">
-                <tr>
-                  <td width="49%" class="tb_menu_title">Q&amp;A管理</td>
-                  <td width="51%" class="tb_menu_title" align="right"><input type="button" value="回上一頁" onClick="window.history.go(-1);" /></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td height="300" align="center" valign="top">
-              <table width="100%">
-                <tr>
-                  <td align="center" valign="top">
-                    <form action="save.php?<?php echo h($sh_post); ?>" method="post" id="form1" name="CodeForm" onSubmit="return validator(this)">
-                      <table width="90%" border="1" cellpadding="4" cellspacing="0" bordercolor="#CCCCCC">
-                        <tr>
-                          <td width="15%" height="41" align="center" class="tb_edit_title">最後修改時間</td>
-                          <td width="84%" class="tb_edit_info">
-                            <input name="uptime" type="text" id="uptime" value="<?php echo h($qa['uptime']); ?>" />
-                            <img onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'uptime'})" src="../script/datepicker/skin/datePicker.gif" width="16" height="22" align="absmiddle">
-                            <span style="color:#888;">（留空則自動使用目前時間）</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td align="center" class="tb_edit_title">類型</td>
-                          <td class="tb_edit_info">
-                            <label><input name="cat_id" type="radio" value="b" <?php chkChecked('b', $qa['cat_id']); ?>>購物問題</label>&nbsp;&nbsp;&nbsp;
-                            <label><input name="cat_id" type="radio" value="m" <?php chkChecked('m', $qa['cat_id']); ?>>會員問題</label>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="tb_edit_title">問題</td>
-                          <td class="tb_edit_info"><input name="question" type="text" id="question" value="<?php echo h($qa['question']); ?>" size="60"></td>
-                        </tr>
-                        <tr>
-                          <td align="center" class="tb_edit_title">答覆</td>
-                          <td class="tb_edit_info"><textarea class="ckeditor" id="ans" name="ans" cols="" rows=""><?php echo h($qa['ans']); ?></textarea></td>
-                        </tr>
-                        <tr>
-                          <td align="center" class="tb_edit_title">上下架</td>
-                          <td class="tb_edit_info">
-                            <label>上架<input name="ishow" type="radio" value="1" <?php chkChecked('1', $qa['ishow']); ?>></label>&nbsp;&nbsp;&nbsp;
-                            <label>下架<input name="ishow" type="radio" value="0" <?php chkChecked('0', $qa['ishow']); ?>></label>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td align="center" class="tb_edit_title">排序</td>
-                          <td class="tb_edit_info">
-                            <select name="m_sort" id="m_sort">
-                              <?php getDateSelectOption(1, $sort_end, $qa['m_sort']); ?>
-                            </select>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colspan="2" align="center">
-                            <input type="hidden" value="<?php echo h($qa['qa_code']); ?>" name="qa_code" id="qa_code" />
-                            <input type="hidden" value="<?php echo (int)$page; ?>" name="page" id="page" />
-                            <input type="submit" name="button" id="button" value="<?php echo ($cms_mode == 'add') ? '新增資料' : '修改資料'; ?>">
-                          </td>
-                        </tr>
-                      </table>
-                    </form>
-                    <br><br>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-        <br />
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_md">
+        <div class="panel_head tb_menu_title">
+          <div>Q&amp;A管理</div>
+          <div><input type="button" value="回上一頁" onClick="window.history.go(-1);" /></div>
+        </div>
+        <div class="panel_body">
+<form action="save.php?<?php echo h($sh_post); ?>" method="post" id="form1" name="CodeForm" onSubmit="return validator(this)">
+  <div class="edit_table">
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">最後修改時間</div>
+  <div class="edit_info"><input type="text" value="<?php echo h($qa['uptime']); ?>" name="uptime" id="uptime">
+    <img src="../script/datepicker/skin/datePicker.gif" alt="" width="16" height="22" class="date_icon" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss',el:'uptime'})">
+    <span style="color:#888;">（留空則自動使用目前時間）</span></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">類型</div>
+  <div class="edit_info tb_edit_info"><label><input name="cat_id" type="radio" value="b" <?php chkChecked('b', $qa['cat_id']); ?>>購物問題</label>&nbsp;&nbsp;&nbsp;
+    <label><input name="cat_id" type="radio" value="m" <?php chkChecked('m', $qa['cat_id']); ?>>會員問題</label></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">問題</div>
+  <div class="edit_info tb_edit_info"><input name="question" type="text" id="question" value="<?php echo h($qa['question']); ?>" size="60"></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">答覆</div>
+  <div class="edit_info tb_edit_info"><textarea class="ckeditor" id="ans" name="ans" cols="" rows=""><?php echo h($qa['ans']); ?></textarea></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">上下架</div>
+  <div class="edit_info tb_edit_info"><label>上架<input name="ishow" type="radio" value="1" <?php chkChecked('1', $qa['ishow']); ?>></label>&nbsp;&nbsp;&nbsp;
+    <label>下架<input name="ishow" type="radio" value="0" <?php chkChecked('0', $qa['ishow']); ?>></label></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">排序</div>
+  <div class="edit_info tb_edit_info"><select name="m_sort" id="m_sort">
+      <?php getDateSelectOption(1, $sort_end, $qa['m_sort']); ?>
+    </select></div>
+</div>
+    <div class="edit_actions">
+      <input type="hidden" value="<?php echo h($qa['qa_code']); ?>" name="qa_code" id="qa_code" />
+      <input type="hidden" value="<?php echo (int)$page; ?>" name="page" id="page" />
+      <input type="submit" name="button" id="button" value="<?php echo ($cms_mode == 'add') ? '新增資料' : '修改資料'; ?>">
+    </div>
+  </div>
+</form>
+        </div>
       </div>
-    </td>
-  </tr>
-</table>
+    </div>
+  </div>
+</div>
 </body>
 </html>

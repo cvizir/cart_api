@@ -25,7 +25,8 @@ if ($no !== '') {
   }
 }
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -41,62 +42,43 @@ if ($no !== '') {
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" bgcolor="#525252" align="left" valign="top"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><div align="center"><br />
-      <br />
-      <table width="800" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="100%"><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td class="tb_menu_title">版面管理</td>
-              <td align="right" class="tb_menu_title"><input type="button" value="回上一頁" onClick="window.history.go(-1);" /></td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top"><table width="100%">
-            <tr><td>&nbsp;</td></tr>
-            <tr>
-              <td align="center" valign="top">
-                <form action="save.php?<?php echo h($sh_post); ?>" method="post" id="form1" name="CodeForm" onSubmit="return validator(this)">
-                  <table width="66%" border="1" cellpadding="4" cellspacing="0" bordercolor="#CCCCCC">
-                    <tr>
-                      <td width="19%" align="center" class="tb_edit_title">名稱</td>
-                      <td width="81%" class="tb_edit_info"><input name="name" type="text" value="<?php echo h($billboardcat['name']); ?>" size="50" maxlength="50"></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">網址</td>
-                      <td class="tb_edit_info"><input name="web_url" type="text" value="<?php echo h($billboardcat['web_url']); ?>" size="50"></td>
-                    </tr>
-                    <tr>
-                      <td align="center" class="tb_edit_title">備註</td>
-                      <td class="tb_edit_info"><textarea name="ps" id="ps" cols="45" rows="5"><?php echo h($billboardcat['ps']); ?></textarea></td>
-                    </tr>
-                    <tr>
-                      <td colspan="2" align="center">
-                        <input type="hidden" value="<?php echo h($billboardcat['no']); ?>" name="no" id="no" />
-                        <input type="hidden" value="<?php echo (int)$page; ?>" name="page" id="page" />
-                        <input type="submit" name="button" id="button" value="<?php echo ($cms_mode == 'add') ? '新增資料' : '修改資料'; ?>">
-                      </td>
-                    </tr>
-                  </table>
-                  <br>
-                  <br>
-                </form>
-              </td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </div></td>
-  </tr>
-</table>
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_md">
+        <div class="panel_head tb_menu_title">
+          <div>版面管理</div>
+          <div><input type="button" value="回上一頁" onClick="window.history.go(-1);" /></div>
+        </div>
+        <div class="panel_body">
+<form action="save.php?<?php echo h($sh_post); ?>" method="post" id="form1" name="CodeForm" onSubmit="return validator(this)">
+  <div class="edit_table" style="width:66%;">
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">名稱</div>
+  <div class="edit_info tb_edit_info"><input name="name" type="text" value="<?php echo h($billboardcat['name']); ?>" size="50" maxlength="50"></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">網址</div>
+  <div class="edit_info tb_edit_info"><input name="web_url" type="text" value="<?php echo h($billboardcat['web_url']); ?>" size="50"></div>
+</div>
+<div class="edit_row">
+  <div class="edit_title tb_edit_title">備註</div>
+  <div class="edit_info tb_edit_info"><textarea name="ps" id="ps" cols="45" rows="5"><?php echo h($billboardcat['ps']); ?></textarea></div>
+</div>
+    <div class="edit_actions">
+      <input type="hidden" value="<?php echo h($billboardcat['no']); ?>" name="no" id="no" />
+      <input type="hidden" value="<?php echo (int)$page; ?>" name="page" id="page" />
+      <input type="submit" name="button" id="button" value="<?php echo ($cms_mode == 'add') ? '新增資料' : '修改資料'; ?>">
+    </div>
+  </div>
+</form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

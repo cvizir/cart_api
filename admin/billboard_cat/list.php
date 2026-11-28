@@ -34,7 +34,8 @@ function safeUrl($url) {
   return $url;
 }
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -54,72 +55,57 @@ function safeUrl($url) {
   }
 </script>
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><div align="center"><br />
-      <br />
-      <table width="709" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="744"><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td class="tb_menu_title">版面管理</td>
-              <td align="right" class="tb_menu_title"><input type="button" value="新增廣告" onClick="onAdd()" /></td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td align="center" valign="top"><table width="88%">
-            <tr><td valign="bottom">&nbsp;</td></tr>
-            <tr>
-              <td align="center" valign="top">
-                <table width="734" border="1" cellpadding="2" cellspacing="0" bordercolor="#CCCCCC">
-                  <tr>
-                    <td width="72" height="29" align="center" class="tb_list_title">序號</td>
-                    <td width="272" align="center" class="tb_list_title">廣告名稱</td>
-                    <td width="88" align="center" class="tb_list_title">編輯子類別</td>
-                    <td width="98" align="center" class="tb_list_title">編輯</td>
-                  </tr>
-                  <?php
-                  $no = ($page - 1) * $pagesize;
-                  foreach ($catList as $list_info) {
-                    $no++;
-                    $no_js   = h(json_encode((string)$list_info['no']));
-                    $name_js = h(json_encode((string)$list_info['name']));
-                    $link    = safeUrl($list_info['web_url']);
-                  ?>
-                  <tr>
-                    <td align="center" class="text_1"><?php echo $no; ?></td>
-                    <td align="left" class="text_1">&nbsp;<?php echo h($list_info['name']); ?>
-                      <?php if ($link !== '') { ?>
-                      &nbsp;<input type="button" class="btn_text" value="連結" onClick="window.open(<?php echo h(json_encode($link)); ?>, '_blank');" />
-                      <?php } ?>
-                    </td>
-                    <td align="center" class="text_1"><input type="button" class="btn_text" value="編輯子類別" onClick="onSub(<?php echo $no_js; ?>, <?php echo $name_js; ?>)" /></td>
-                    <td align="center" class="text_1"><input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $no_js; ?>)" /></td>
-                  </tr>
-                  <?php } ?>
-                  <?php if (empty($catList)) { ?>
-                  <tr><td colspan="4" align="center" class="text_1">目前沒有資料</td></tr>
-                  <?php } ?>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" class="page"><span class="wd_white_12">
-                <?php echo $catClass->showPageMenu($argument); ?>
-              </span></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </div></td>
-  </tr>
-</table>
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_sm">
+        <div class="panel_head tb_menu_title">
+          <div>版面管理</div>
+          <div><input type="button" value="新增廣告" onClick="onAdd()" /></div>
+        </div>
+        <div class="panel_body">
+<div class="list_scroll">
+  <div class="list_table" style="--cols:70px 1fr 110px 120px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title">序號</div>
+      <div class="list_cell tb_list_title">廣告名稱</div>
+      <div class="list_cell tb_list_title">編輯子類別</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    $no = ($page - 1) * $pagesize;
+    foreach ($catList as $list_info) {
+      $no++;
+      $no_js   = h(json_encode((string)$list_info['no']));
+      $name_js = h(json_encode((string)$list_info['name']));
+      $link    = safeUrl($list_info['web_url']);
+    ?>
+    <div class="list_row">
+      <div class="list_cell text_1"><?php echo $no; ?></div>
+      <div class="list_cell al_left text_1"><?php echo h($list_info['name']); ?>
+        <?php if ($link !== '') { ?>
+        <input type="button" class="btn_text" value="連結" onClick="window.open(<?php echo h(json_encode($link)); ?>, '_blank');" />
+        <?php } ?>
+      </div>
+      <div class="list_cell text_1"><input type="button" class="btn_text" value="編輯子類別" onClick="onSub(<?php echo $no_js; ?>, <?php echo $name_js; ?>)" /></div>
+      <div class="list_cell text_1"><input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $no_js; ?>)" /></div>
+    </div>
+    <?php } ?>
+    <?php if (empty($catList)) { ?>
+    <div class="list_row"><div class="list_cell list_span text_1">目前沒有資料</div></div>
+    <?php } ?>
+  </div>
+</div>
+<div class="page pager"><span class="wd_white_12">
+  <?php echo $catClass->showPageMenu($argument); ?>
+</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

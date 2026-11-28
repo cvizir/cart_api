@@ -10,7 +10,9 @@ if (!$pdo instanceof PDO) {
 $del_pd_file = isset($_GET['del_pd_file']) ? $_GET['del_pd_file'] : '';
 $page = !empty($_GET["page"]) ? (int)$_GET["page"] : 1;
 $pagesize = 50;
-$trace = 1;
+$trace = 0;
+$params = [];
+$where = '';
 
 $sh_pdcat_code = isset($_REQUEST["sh_pdcat_code"]) ? $_REQUEST["sh_pdcat_code"] : '';
 $sh_publishing_code = isset($_REQUEST["sh_publishing_code"]) ? $_REQUEST["sh_publishing_code"] : '';
@@ -36,8 +38,7 @@ $productList = $listData['data'];
 $total = $listData['total'];
 ?>
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-Hant">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title><?php echo ADMIN_TITLE; ?></title>
@@ -62,90 +63,61 @@ $total = $listData['total'];
   </script>
   <link href="../style.css" rel="stylesheet" type="text/css" />
 </head>
-
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-  <table width="100%" border="0" cellspacing="0" cellpadding="0">
-    <tr>
-      <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-      <td valign="top">
-        <div align="center" style="margin-left:10px;"><br /><br />
-          <table width="95%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-            <tr>
-              <td width="1170">
-                <table width="100%" border="0" cellspacing="0" cellpadding="4">
-                  <tr>
-                    <td class="tb_menu_title">產品管理</td>
-                    <td align="right" class="tb_menu_title">
-                      <input name="Submit" type="button" value="新增" onClick="onAdd()" />
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td height="300" align="center" valign="top">
-                <table width="90%">
-                  <tr>
-                    <td valign="bottom">
-                      <div align="right">
-                        <table width="90%" border="0" align="center" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <form action="" method="GET">
-                              <td height="30" colspan="1" valign="middle">模糊查詢：
-                                <input name="sh_txt" type="text" value="<?= htmlspecialchars($sh_txt) ?>" size="46">&nbsp;&nbsp;
-                                <input type="submit" name="button" id="button" value="送出">
-                              </td>
-                            </form>
-                          </tr>
-                        </table>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" valign="top">
-                      <form action="" method="post" name="form1" id="form1">
-                        <table width="1100" border="1" cellpadding="2" cellspacing="0">
-                          <tr>
-                            <td width="93" height="28" class="tb_list_title">No</td>
-                            <td width="349" align="left" class="tb_list_title">商品名稱</td>
-                            <td width="114" align="left" class="tb_list_title">商品類別</td>
-                            <td width="48" align="left" class="tb_list_title">價格</td>
-                            <td width="48" class="tb_list_title">庫存</td>
-                            <td width="48" class="tb_list_title">狀態</td>
-                            <td width="91" class="tb_list_title">編輯</td>
-                          </tr>
-                          <?php
-                          foreach ($productList as $list_info) {
-                          ?>
-                            <tr>
-                              <td align="left" class="tb_list_info"><?= htmlspecialchars($list_info['no']); ?></td>
-                              <td align="left" class="tb_list_info"><?= htmlspecialchars($list_info['name']); ?></td>
-                              <td align="left" class="tb_list_info"><?= htmlspecialchars($list_info['pdcat_code']); ?></td>
-                              <td align="center" class="tb_list_info"><?= htmlspecialchars($list_info['price']); ?></td>
-                              <td align="center" class="tb_list_info"><?= htmlspecialchars($list_info['pd_stock']); ?></td>
-                              <td class="tb_list_info"><?= getIshow($list_info['ishow']); ?></td>
-                              <td class="tb_list_info">
-                                <input name="Submit2" type="button" class="btn_text" value="編輯" onClick="onEdit('<?= $list_info['no']; ?>')" />
-                                <input name="Submit2" type="button" class="btn_text" value="刪除" onClick="onDel('<?= $list_info['no']; ?>','<?= htmlspecialchars(addslashes($list_info['name'])); ?>')" />
-                              </td>
-                            </tr>
-                          <?php } ?>
-                        </table>
-                      </form>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" class="page"><span class="wd_white_12"><?= $productClass->showPageMenu($argument) ?></span></td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-          <br />
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_lg">
+        <div class="panel_head tb_menu_title">
+          <div>產品管理</div>
+          <div><input name="Submit" type="button" value="新增" onClick="onAdd()" /></div>
         </div>
-      </td>
-    </tr>
-  </table>
+        <div class="panel_body">
+<div class="toolbar">
+  <form action="" method="GET">
+    模糊查詢：
+    <input name="sh_txt" type="text" value="<?= htmlspecialchars($sh_txt) ?>" size="46">&nbsp;&nbsp;
+    <input type="submit" name="button" id="button" value="送出">
+  </form>
+</div>
+<form action="" method="post" name="form1" id="form1">
+<div class="list_scroll">
+  <div class="list_table" style="--cols:70px 1fr 130px 80px 70px 80px 140px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title al_left">No</div>
+      <div class="list_cell tb_list_title al_left">商品名稱</div>
+      <div class="list_cell tb_list_title al_left">商品類別</div>
+      <div class="list_cell tb_list_title">價格</div>
+      <div class="list_cell tb_list_title">庫存</div>
+      <div class="list_cell tb_list_title">狀態</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    foreach ($productList as $list_info) {
+    ?>
+    <div class="list_row">
+      <div class="list_cell tb_list_info al_left"><?= htmlspecialchars($list_info['no']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?= htmlspecialchars($list_info['name']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?= htmlspecialchars($list_info['pdcat_code']); ?></div>
+      <div class="list_cell tb_list_info"><?= htmlspecialchars($list_info['price']); ?></div>
+      <div class="list_cell tb_list_info"><?= htmlspecialchars($list_info['pd_stock']); ?></div>
+      <div class="list_cell tb_list_info"><?= getIshow($list_info['ishow']); ?></div>
+      <div class="list_cell tb_list_info">
+        <input name="Submit2" type="button" class="btn_text" value="編輯" onClick="onEdit('<?= $list_info['no']; ?>')" />
+        <input name="Submit2" type="button" class="btn_text" value="刪除" onClick="onDel('<?= $list_info['no']; ?>','<?= htmlspecialchars(addslashes($list_info['name'])); ?>')" />
+      </div>
+    </div>
+    <?php } ?>
+  </div>
+</div>
+</form>
+<div class="page pager"><span class="wd_white_12"><?= $productClass->showPageMenu($argument) ?></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
-
 </html>

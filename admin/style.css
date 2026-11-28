@@ -45,6 +45,8 @@ img {
 .menu_url {
   color: #ffffff;
   font-size: 13px;
+  display: block;
+  padding: 8px 0;
 }
 
 .tb_menu_title,
@@ -93,7 +95,6 @@ img {
 
 .header_logout_div {
   width: 40px;
-  float: right;
   margin-right: 100px;
   background-color: #7b7b7b;
   text-align: center;
@@ -129,3 +130,230 @@ img {
   width: 200px;
   margin-left: 40px;
 }
+
+/* ===== 版面 (div layout) ===== */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.layout_body {
+  display: flex;
+  flex: 1;
+}
+.layout_sidebar {
+  width: 130px;
+  flex-shrink: 0;
+  background-color: #525252;
+}
+.layout_content {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 20px;
+}
+.welcome {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 選單 ===== */
+.menu {
+  padding: 6px;
+  text-align: center;
+}
+.menu_title {
+  padding: 15px 0 5px;
+}
+.menu_list li {
+  text-align: center;
+}
+
+/* ===== 登入頁 ===== */
+.login_topbar {
+  height: 26px;
+  background-color: #666666;
+}
+.login_board {
+  min-height: 280px;
+  background: url(images/index_board_bg.jpg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login_form {
+  padding: 5px;
+}
+.login_form .index_title {
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+}
+.login_row {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+.login_row label {
+  width: 110px;
+  padding-right: 5px;
+  text-align: right;
+}
+.login_row input {
+  width: 180px;
+}
+.login_actions {
+  text-align: right;
+}
+
+/* ===== 列表 / 編輯頁共用 (div layout) ===== */
+.panel {
+  width: 100%;
+  margin: 0 auto;
+  border: 1px solid #637A9C;
+  box-sizing: border-box;
+}
+.panel_sm { max-width: 760px; }
+.panel_md { max-width: 820px; }
+.panel_lg { max-width: 1150px; }
+.panel_xl { max-width: 1300px; }
+.panel_head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+}
+.panel_body {
+  min-height: 300px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.toolbar form { margin: 0; }
+.pager {
+  text-align: center;
+  margin-top: 12px;
+}
+.date_icon {
+  width: 16px;
+  height: 22px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* 列表：每個列表用 style="--cols:..." 指定欄寬 */
+.list_scroll { overflow-x: auto; }
+.list_table {
+  min-width: 600px;
+  border-top: 1px solid #cccccc;
+  border-left: 1px solid #cccccc;
+}
+.list_row {
+  display: grid;
+  grid-template-columns: var(--cols);
+}
+.list_cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 2px;
+  box-sizing: border-box;
+  text-align: center;
+  word-break: break-all;
+  border-right: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+}
+.list_cell.al_left {
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 6px;
+}
+.list_head .list_cell { min-height: 28px; }
+.list_span { grid-column: 1 / -1; }
+
+/* 編輯表單 */
+.edit_table {
+  width: 90%;
+  margin: 0 auto;
+  border-top: 1px solid #cccccc;
+  border-left: 1px solid #cccccc;
+}
+.edit_row {
+  display: grid;
+  grid-template-columns: var(--lw, 130px) 1fr;
+}
+.edit_title,
+.edit_info {
+  min-height: 30px;
+  padding: 4px;
+  min-width: 0;
+  box-sizing: border-box;
+  border-right: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+}
+.edit_title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.edit_info textarea { max-width: 100%; box-sizing: border-box; }
+.edit_info img { max-width: 100%; }
+.edit_sub + .edit_sub { margin-top: 6px; }
+.edit_actions {
+  padding: 8px;
+  text-align: center;
+  border-right: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+}
+
+.list_cell.al_right {
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: 6px;
+}
+.filter_bar {
+  margin-bottom: 10px;
+  line-height: 2;
+}
+.filter_bar form { margin: 0; }
+
+/* 訂單編輯：運費 / 其他費用 */
+.fee_form {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+.fee_msg { color: #dd0000; margin-bottom: 6px; }
+.fee_row {
+  display: grid;
+  grid-template-columns: 39% 34% 27%;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.state_bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.state_submit { margin-left: auto; }
+
+/* 圖片上傳區 */
+.photo_grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.photo_item { min-width: 0; }
+.photo_item li { margin-bottom: 6px; }
+.photo_item img { max-width: 100%; }

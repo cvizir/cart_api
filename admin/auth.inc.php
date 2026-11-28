@@ -4,6 +4,27 @@
  * 放在 admin/ 資料夾，與 session.php 同一層。
  */
 
+/*
+ * hash_equals() 要 PHP 5.6 以上才有，舊版本直接呼叫會出現
+ * "Call to undefined function hash_equals()"。這裡補上相容版本：
+ * 逐字元比對、不會因為前面的字元不同就提早結束，避免從回應時間猜出內容。
+ */
+if (!function_exists('hash_equals')) {
+  function hash_equals($known_string, $user_string) {
+    $known_string = (string)$known_string;
+    $user_string  = (string)$user_string;
+    if (strlen($known_string) !== strlen($user_string)) {
+      return false;
+    }
+    $result = 0;
+    $len    = strlen($known_string);
+    for ($i = 0; $i < $len; $i++) {
+      $result |= ord($known_string[$i]) ^ ord($user_string[$i]);
+    }
+    return $result === 0;
+  }
+}
+
 /** 啟動 session：Cookie 加上 HttpOnly（JavaScript 讀不到），HTTPS 網站時加上 Secure */
 function adminSessionStart() {
   if (session_status() === PHP_SESSION_NONE) {

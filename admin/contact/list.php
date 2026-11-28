@@ -25,7 +25,8 @@ $total        = $result['total'];
 // 編輯 / 刪除 時帶給 save.php 的參數
 $sh_post = "&page=" . $page . "&pagesize=" . $pagesize . "&total=" . $total . $argument;
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -45,71 +46,57 @@ $sh_post = "&page=" . $page . "&pagesize=" . $pagesize . "&total=" . $total . $a
 </script>
 <link href="../style.css" rel="stylesheet" type="text/css" />
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="101%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td colspan="2"><?php require_once("../header.php"); ?></td>
-  </tr>
-  <tr>
-    <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><div align="center"><br />
-      <br />
-      <table width="806" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="798"><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td class="tb_menu_title">聯絡我們管理</td>
-              <td align="right" class="tb_menu_title">&nbsp;</td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top"><table width="89%">
-            <tr>
-              <td align="center" valign="top">
-                <table width="792" border="1" cellpadding="2" cellspacing="0" bordercolor="#CCCCCC">
-                  <tr>
-                    <td width="60" height="28" class="tb_list_title">序號</td>
-                    <td width="150" align="left" class="tb_list_title">姓名</td>
-                    <td width="250" align="left" class="tb_list_title">主題</td>
-                    <td width="150" class="tb_list_title">訊息時間</td>
-                    <td width="135" class="tb_list_title">編輯</td>
-                  </tr>
-                  <?php
-                  $no = ($page - 1) * $pagesize;
-                  foreach ($contactList as $list_info) {
-                    $no++;
-                    $code_js = h(json_encode((string)$list_info['contact_code']));
-                    $name_js = h(json_encode((string)$list_info['name']));
-                  ?>
-                  <tr>
-                    <td class="tb_list_info"><?php echo $no; ?></td>
-                    <td class="tb_list_info" style="text-align:left;"><?php echo h($list_info['name']); ?></td>
-                    <td class="tb_list_info" style="text-align:left;"><?php echo h($list_info['subject']); ?></td>
-                    <td class="tb_list_info"><?php echo h($list_info['post_time']); ?></td>
-                    <td class="tb_list_info">
-                      <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $code_js; ?>)" />
-                      <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $code_js; ?>, <?php echo $name_js; ?>)" />
-                    </td>
-                  </tr>
-                  <?php } ?>
-                  <?php if (empty($contactList)) { ?>
-                  <tr><td colspan="5" class="tb_list_info">目前沒有資料</td></tr>
-                  <?php } ?>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" class="page"><span class="wd_white_12">
-                <?php echo $contactClass->showPageMenu($argument); ?>
-              </span></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </div></td>
-  </tr>
-</table>
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_md">
+        <div class="panel_head tb_menu_title">
+          <div>聯絡我們管理</div>
+          <div>&nbsp;</div>
+        </div>
+        <div class="panel_body">
+<div class="list_scroll">
+  <div class="list_table" style="--cols:60px 150px 1fr 160px 170px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title">序號</div>
+      <div class="list_cell tb_list_title al_left">姓名</div>
+      <div class="list_cell tb_list_title al_left">主題</div>
+      <div class="list_cell tb_list_title">訊息時間</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    $no = ($page - 1) * $pagesize;
+    foreach ($contactList as $list_info) {
+      $no++;
+      $code_js = h(json_encode((string)$list_info['contact_code']));
+      $name_js = h(json_encode((string)$list_info['name']));
+    ?>
+    <div class="list_row">
+      <div class="list_cell tb_list_info"><?php echo $no; ?></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($list_info['name']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($list_info['subject']); ?></div>
+      <div class="list_cell tb_list_info"><?php echo h($list_info['post_time']); ?></div>
+      <div class="list_cell tb_list_info">
+        <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $code_js; ?>)" />
+        <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $code_js; ?>, <?php echo $name_js; ?>)" />
+      </div>
+    </div>
+    <?php } ?>
+    <?php if (empty($contactList)) { ?>
+    <div class="list_row"><div class="list_cell list_span tb_list_info">目前沒有資料</div></div>
+    <?php } ?>
+  </div>
+</div>
+<div class="page pager"><span class="wd_white_12">
+  <?php echo $contactClass->showPageMenu($argument); ?>
+</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

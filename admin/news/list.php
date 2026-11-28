@@ -13,11 +13,11 @@ $pagesize = 25;
 
 $argument = "";   // 分頁連結額外參數（目前沒有搜尋條件）
 $trace    = 0;
-$order    = " ORDER BY `ishow` DESC, `end_time` DESC ";
+$order    = " ORDER BY `ishow` DESC, `start_time` DESC ";
 $where    = "";
 $params   = array();
 
-$newsClass = new DBClass('news', $page, $pagesize);
+$newsClass = new DBClass('article', $page, $pagesize);
 $result    = $newsClass->getAdminList($where, $order, $trace, $params);
 $newsList  = $result['data'];
 $total     = $result['total'];
@@ -25,11 +25,10 @@ $total     = $result['total'];
 // 編輯 / 刪除 / 新增 時帶給下一頁的參數
 $sh_post = "&page=" . $page . "&pagesize=" . $pagesize . "&total=" . $total . $argument;
 
-// 前端的權限提示（$admin_pv_check 由 session.php 提供，沒有時視為不限制）
-$admin_pv = isset($_SESSION["admin_pv"]) ? $_SESSION["admin_pv"] : '';
 $can_edit = empty($admin_pv_check) || strExist($admin_pv, 'news_et');
 ?>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo h(ADMIN_TITLE); ?></title>
@@ -57,84 +56,68 @@ $can_edit = empty($admin_pv_check) || strExist($admin_pv, 'news_et');
 </script>
 <link href="../style.css" rel="stylesheet" type="text/css" />
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-<table width="100%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td width="10%" align="left" valign="top" bgcolor="#525252"><?php require_once("../menu.php"); ?></td>
-    <td width="90%" valign="top"><div align="center"><br />
-      <br />
-      <table width="95%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#637A9C">
-        <tr>
-          <td width="1170"><table width="100%" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-              <td class="tb_menu_title">最新訊息</td>
-              <td align="right" class="tb_menu_title"><span class="tb_list_title_bt">
-                <input name="Submit" type="button" value="新增" onClick="onAdd()" />
-              </span></td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td height="300" align="center" valign="top"><table width="89%">
-            <tr><td valign="bottom">&nbsp;</td></tr>
-            <tr>
-              <td align="center" valign="top">
-                <table width="1100" border="1" cellpadding="2" cellspacing="0" bordercolor="#CCCCCC">
-                  <tr>
-                    <td width="60" height="28" class="tb_list_title">序號</td>
-                    <td width="96" align="center" valign="middle" class="tb_list_title">撰寫日期</td>
-                    <td width="441" align="left" class="tb_list_title">名稱</td>
-                    <td width="280" class="tb_list_title">宣傳時間</td>
-                    <td width="58" class="tb_list_title">上下架</td>
-                    <td width="127" class="tb_list_title">編輯</td>
-                  </tr>
-                  <?php
-                  $no  = ($page - 1) * $pagesize;
-                  $now = time();
-                  foreach ($newsList as $list_info) {
-                    $no++;
-                    $code_js = h(json_encode((string)$list_info['news_code']));
-                    $name_js = h(json_encode((string)$list_info['name']));
+<body>
+<div class="layout">
+  <div class="layout_header"><?php require_once("../header.php"); ?></div>
+  <div class="layout_body">
+    <div class="layout_sidebar"><?php require_once("../menu.php"); ?></div>
+    <div class="layout_content">
+      <div class="panel panel_lg">
+        <div class="panel_head tb_menu_title">
+          <div>寶貝分享區文章</div>
+          <div><input name="Submit" type="button" value="新增" onClick="onAdd()" /></div>
+        </div>
+        <div class="panel_body">
+<div class="list_scroll">
+  <div class="list_table" style="--cols:55px 140px 1fr 250px 70px 165px;">
+    <div class="list_row list_head">
+      <div class="list_cell tb_list_title">序號</div>
+      <div class="list_cell tb_list_title">撰寫日期</div>
+      <div class="list_cell tb_list_title al_left">名稱</div>
+      <div class="list_cell tb_list_title al_left">宣傳時間</div>
+      <div class="list_cell tb_list_title">上下架</div>
+      <div class="list_cell tb_list_title">編輯</div>
+    </div>
+    <?php
+    $no  = ($page - 1) * $pagesize;
+    $now = time();
+    foreach ($newsList as $list_info) {
+      $no++;
+      $code_js = h(json_encode((string)$list_info['news_code']));
+      $name_js = h(json_encode((string)$list_info['name']));
 
-                    // 沒有設定下架日期（空白或 0000-）視為永不結束
-                    $end_raw = (string)$list_info['end_time'];
-                    $ended   = false;
-                    if ($end_raw !== '' && substr($end_raw, 0, 4) !== '0000') {
-                      $end_ts = strtotime($end_raw);
-                      $ended  = ($end_ts !== false && $end_ts < $now);
-                    }
-                  ?>
-                  <tr>
-                    <td class="tb_list_info"><?php echo $no; ?></td>
-                    <td class="tb_list_info"><?php echo h($list_info['wttime']); ?></td>
-                    <td class="tb_list_info" style="text-align:left;"><?php echo h($list_info['name']); ?></td>
-                    <td align="left" class="tb_list_info" style="text-align:left;">
-                      <?php if ($ended) { echo '已結束'; } else { echo h($list_info['start_time']) . ' ~ ' . h($list_info['end_time']); } ?>
-                    </td>
-                    <td class="tb_list_info"><?php echo getIshow($list_info['ishow']); ?></td>
-                    <td class="tb_list_info">
-                      <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $code_js; ?>)" />
-                      <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $code_js; ?>, <?php echo $name_js; ?>)" />
-                    </td>
-                  </tr>
-                  <?php } ?>
-                  <?php if (empty($newsList)) { ?>
-                  <tr><td colspan="6" class="tb_list_info">目前沒有資料</td></tr>
-                  <?php } ?>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" class="page"><span class="wd_white_12">
-                <?php echo $newsClass->showPageMenu($argument); ?>
-              </span></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-      <br />
-    </div></td>
-  </tr>
-</table>
+      // 沒有設定下架日期（空白或 0000-）視為永不結束
+      $end_raw = (string)$list_info['end_time'];
+      $ended   = false;
+      if ($end_raw !== '' && substr($end_raw, 0, 4) !== '0000') {
+        $end_ts = strtotime($end_raw);
+        $ended  = ($end_ts !== false && $end_ts < $now);
+      }
+    ?>
+    <div class="list_row">
+      <div class="list_cell tb_list_info"><?php echo $no; ?></div>
+      <div class="list_cell tb_list_info"><?php echo h($list_info['wttime']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?php echo h($list_info['name']); ?></div>
+      <div class="list_cell tb_list_info al_left"><?php if ($ended) { echo '已結束'; } else { echo h($list_info['start_time']) . ' ~ ' . h($list_info['end_time']); } ?></div>
+      <div class="list_cell tb_list_info"><?php echo getIshow($list_info['ishow']); ?></div>
+      <div class="list_cell tb_list_info">
+        <input type="button" class="btn_text" value="檢視 / 編輯" onClick="onEdit(<?php echo $code_js; ?>)" />
+        <input type="button" class="btn_text" value="刪除" onClick="onDel(<?php echo $code_js; ?>, <?php echo $name_js; ?>)" />
+      </div>
+    </div>
+    <?php } ?>
+    <?php if (empty($newsList)) { ?>
+    <div class="list_row"><div class="list_cell list_span tb_list_info">目前沒有資料</div></div>
+    <?php } ?>
+  </div>
+</div>
+<div class="page pager"><span class="wd_white_12">
+  <?php echo $newsClass->showPageMenu($argument); ?>
+</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
